@@ -44,22 +44,50 @@ const FileUpload = ({ onUploadSuccess }) => {
         setUploading(true);
         setError('');
         setProgress(0);
-        const formData = new FormData();
-        formData.append('file', file);
+
         try {
-            const response = await axios.post(`${API_URL}/api/files/upload`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                onUploadProgress: (e) => setProgress(Math.round((e.loaded * 100) / e.total)),
+            // 1. Direct Upload to Supabase (Bypass Backend)
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `uploads/${fileName}`;
+
+            // Lazy import to avoid load issues if not used
+            const { supabase } = await import('../utils/supabaseClient');
+
+            const { data, error: uploadError } = await supabase.storage
+                .from('apk-files')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) throw uploadError;
+
+            // 2. Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('apk-files')
+                .getPublicUrl(filePath);
+
+            // 3. Save Metadata to Backend
+            const response = await axios.post(`${API_URL}/api/files/upload`, {
+                originalName: file.name,
+                fileSize: file.size,
+                mimetype: file.type,
+                storageKey: filePath,
+                fileUrl: publicUrl,
+                storageType: 'supabase'
             });
+
             if (response.data.success) {
                 setUploadedLink(response.data.file.downloadLink);
                 setFile(null);
-                setProgress(0);
+                setProgress(100);
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 onUploadSuccess();
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Upload failed. Please try again.');
+            console.error(err);
+            setError(err.message || 'Upload failed');
         } finally {
             setUploading(false);
         }

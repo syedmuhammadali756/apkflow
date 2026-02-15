@@ -38,48 +38,52 @@ const upload = multer({
 });
 
 // @route   POST /api/files/upload
-// @desc    Upload an APK file
+// @desc    Upload an APK file (supports direct metadata or multipart)
 // @access  Private
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
-        }
+        let originalName, fileSize, mimetype, storageKey, storageType;
 
-        const { originalname, buffer, size, mimetype } = req.file;
+        // Mode 1: Frontend uploaded directly to Supabase, sending metadata only
+        if (req.body.storageKey && req.body.fileUrl) {
+            originalName = req.body.originalName;
+            fileSize = parseInt(req.body.fileSize);
+            mimetype = req.body.mimetype || 'application/octet-stream';
+            storageKey = req.body.storageKey;
+            storageType = 'supabase';
+        }
+        // Mode 2: Classic multipart file upload
+        else if (req.file) {
+            originalName = req.file.originalname;
+            fileSize = req.file.size;
+            mimetype = req.file.mimetype;
+            storageKey = `${req.userId}/${nanoid(10)}-${req.file.originalname}`;
+            storageType = STORAGE_TYPE;
+            await uploadFile(req.file.buffer, storageKey, mimetype);
+        }
+        else {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
 
         // Check user storage quota
         const user = await User.findById(req.userId);
-        if (!user.hasStorageSpace(size)) {
+        if (!user.hasStorageSpace(fileSize)) {
             return res.status(400).json({
                 success: false,
-                message: 'Storage quota exceeded. Please delete some files or upgrade your plan.'
+                message: 'Storage quota exceeded.'
             });
         }
 
-        // Generate unique file ID
-        const fileId = nanoid(10); // Generate 10-character unique ID
-        const storageKey = `apk-files/${req.userId}/${fileId}.apk`;
+        const fileId = nanoid(10);
 
-
-        // Upload to Storage (R2 or Local)
-        const key = `${req.userId}/${fileId}-${req.file.originalname}`;
-
-        // For local storage, ensuring directory structure if needed is handled by utils
-        await uploadFile(req.file.buffer, key, req.file.mimetype);
-
-        // Create file record
         const newFile = new File({
             fileId,
             userId: req.userId,
-            originalName: req.file.originalname, // sanitize filename
-            fileSize: req.file.size,
-            mimeType: req.file.mimetype,
-            storageKey: key,
-            storageType: STORAGE_TYPE, // Track where file is stored
+            originalName,
+            fileSize,
+            mimeType: mimetype,
+            storageKey,
+            storageType,
             downloadLink: `/d/${fileId}`,
             metadata: {
                 fileExtension: '.apk',
@@ -90,8 +94,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 
         await newFile.save();
 
-        // Update user storage
-        user.totalStorageUsed += size;
+        user.totalStorageUsed += fileSize;
         user.filesCount += 1;
         await user.save();
 
@@ -109,18 +112,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         });
     } catch (error) {
         console.error('Upload error:', error);
-
-        if (error.message.includes('Only APK files')) {
-            return res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
-
         res.status(500).json({
             success: false,
-            message: 'Server error during file upload',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'Server error during file upload'
         });
     }
 });

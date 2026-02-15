@@ -112,5 +112,7 @@ mongoose.connect(MONGO_URI)
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  process.exit(1);
 });
+
+// Export for Vercel serverless
+module.exports = app;
