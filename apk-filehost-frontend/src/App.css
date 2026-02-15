@@ -1,0 +1,40 @@
+/* App-level styles */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: var(--space-4);
+  background: var(--bg-primary);
+}
+
+.loading-screen .spinner {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
+
+.loading-screen span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  letter-spacing: 0.05em;
+}
+
+/* Page transition wrapper */
+.page-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Public page layout */
+.public-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.public-layout>main {
+  flex: 1;
+}
