@@ -159,6 +159,15 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('-password');
 
+        // Force-logout suspended users
+        if (user.isSuspended) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been suspended.',
+                suspended: true
+            });
+        }
+
         res.json({
             success: true,
             user: {

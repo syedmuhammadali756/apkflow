@@ -46,6 +46,23 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, [token]);
 
+    // Periodic suspension check — every 30 seconds
+    useEffect(() => {
+        if (!token || !isAuthenticated) return;
+
+        const interval = setInterval(async () => {
+            try {
+                await axios.get(`${API_URL}/api/auth/me`);
+            } catch (error) {
+                if (error.response?.status === 403) {
+                    logout();
+                }
+            }
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [token, isAuthenticated]);
+
     const login = async (email, password) => {
         try {
             const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
