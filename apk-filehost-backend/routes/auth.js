@@ -40,29 +40,16 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Admin IP/device exemption — admin's IP and device can create unlimited accounts
+        // ===== ADMIN WHITELIST — exempt from all IP/device restrictions =====
         const ADMIN_EMAILS = ['syedmuhammadalibukhari756@gmail.com'];
+        const ADMIN_IPS = (process.env.ADMIN_IPS || '154.208.43.109').split(',').map(ip => ip.trim());
+
         const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
+        const isAdminIP = ADMIN_IPS.includes(clientIP);
 
-        // Check if this IP/device belongs to an admin (admin already registered from here)
-        let isAdminDevice = isAdminEmail;
-        if (!isAdminDevice) {
-            const adminCheckQuery = [];
-            if (clientIP) adminCheckQuery.push({ registrationIP: clientIP });
-            if (deviceFingerprint) adminCheckQuery.push({ deviceFingerprint: deviceFingerprint });
-
-            if (adminCheckQuery.length > 0) {
-                const adminOnDevice = await User.findOne({
-                    email: { $in: ADMIN_EMAILS },
-                    $or: adminCheckQuery
-                });
-                if (adminOnDevice) isAdminDevice = true;
-            }
-        }
-
-        // Check IP and device fingerprint restriction — one account per IP and per device
-        // Skip entirely if this is admin's device/IP
-        if (!isAdminDevice) {
+        // Skip restriction if admin email OR admin IP
+        if (!isAdminEmail && !isAdminIP) {
+            // Check IP and device fingerprint restriction — one account per IP and per device
             const restrictionQuery = [];
             if (clientIP) {
                 restrictionQuery.push({ registrationIP: clientIP });
