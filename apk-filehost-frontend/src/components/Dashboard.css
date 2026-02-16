@@ -318,3 +318,43 @@
         padding: var(--space-4);
     }
 }
+
+/* Upload Limit Reached Card */
+.upload-limit-reached {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
+    background: rgba(245, 158, 11, 0.04);
+}
+
+.limit-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.limit-text-content h3 {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: var(--space-1);
+}
+
+.limit-text-content p {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    line-height: 1.5;
+}
+
+.limit-text-content strong {
+    color: var(--text-secondary);
+}
