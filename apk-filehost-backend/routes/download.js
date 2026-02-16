@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const File = require('../models/File');
 const User = require('../models/User');
@@ -8,24 +9,41 @@ const { getSupabasePublicUrl } = require('../utils/supabaseStorage');
 
 // Determine storage type
 const STORAGE_TYPE = process.env.SUPABASE_URL ? 'supabase' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
-
 const downloadFile = STORAGE_TYPE === 'supabase' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
+const SECRET = process.env.JWT_SECRET || 'apkflow-download-secret';
+
+// Helper: Get base URL (handles Vercel proxy correctly)
+function getBaseUrl(req) {
+    const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+    return `${proto}://${req.get('host')}`;
+}
+
+// Helper: Generate HMAC signature (stateless - no memory needed)
+function generateSignature(fileId, expiry) {
+    return crypto.createHmac('sha256', SECRET)
+        .update(`${fileId}:${expiry}`)
+        .digest('hex')
+        .substring(0, 32);
+}
+
+// Helper: Verify HMAC signature
+function verifySignature(fileId, expiry, sig) {
+    if (!sig || !expiry) return false;
+    if (parseInt(expiry) < Date.now()) return false; // Expired
+    const expected = generateSignature(fileId, expiry);
+    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+}
 
 // @route   GET /d/:fileId
-// @desc    Download file (public endpoint) with domain lock + custom filename
+// @desc    Download file (public) - serves verification page for domain-locked files
 // @access  Public
 router.get('/:fileId', async (req, res) => {
     try {
         const { fileId } = req.params;
-
-        // Find file by ID
         const file = await File.findOne({ fileId, isActive: true });
 
         if (!file) {
-            return res.status(404).json({
-                success: false,
-                message: 'File not found'
-            });
+            return res.status(404).json({ success: false, message: 'File not found' });
         }
 
         // ========== DOMAIN LOCK: Serve verification page ==========
@@ -33,23 +51,11 @@ router.get('/:fileId', async (req, res) => {
             const allowedDomain = file.allowedDomain.trim().toLowerCase()
                 .replace(/^https?:\/\//, '').replace(/\/.*$/, '');
 
-            // Generate a time-limited token (valid 60 seconds)
-            const crypto = require('crypto');
-            const tokenData = `${fileId}-${Date.now()}-${process.env.JWT_SECRET || 'fallback-secret'}`;
-            const token = crypto.createHash('sha256').update(tokenData).digest('hex').substring(0, 32);
-            const expiry = Date.now() + 60000; // 60 seconds
+            // Generate signed token (valid 120 seconds)
+            const expiry = Date.now() + 120000;
+            const sig = generateSignature(fileId, expiry);
+            const baseUrl = getBaseUrl(req);
 
-            // Store token temporarily (in-memory, simple approach)
-            if (!global._downloadTokens) global._downloadTokens = new Map();
-            global._downloadTokens.set(token, { fileId, expiry, allowedDomain });
-
-            // Clean up old tokens
-            for (const [k, v] of global._downloadTokens.entries()) {
-                if (v.expiry < Date.now()) global._downloadTokens.delete(k);
-            }
-
-            // Serve verification HTML page
-            const baseUrl = `${req.protocol}://${req.get('host')}`;
             return res.send(`<!DOCTYPE html>
 <html><head><title>Download Verification</title>
 <style>
@@ -84,7 +90,7 @@ router.get('/:fileId', async (req, res) => {
     document.getElementById("spinner").style.display = "none";
     if (ok) {
       document.getElementById("success").style.display = "block";
-      window.location.href = "${baseUrl}/d/${fileId}/download?token=${token}&t=${expiry}";
+      window.location.href = "${baseUrl}/d/${fileId}/download?t=${expiry}&sig=${sig}";
     } else {
       var el = document.getElementById("error");
       el.style.display = "block";
@@ -103,44 +109,32 @@ router.get('/:fileId', async (req, res) => {
     } catch (error) {
         console.error('Download error:', error);
         if (!res.headersSent) {
-            res.status(500).json({
-                success: false,
-                message: 'Server error downloading file'
-            });
+            res.status(500).json({ success: false, message: 'Server error downloading file' });
         }
     }
 });
 
 // @route   GET /d/:fileId/download
-// @desc    Actual file download (called after verification page)
-// @access  Public (with token for domain-locked files)
+// @desc    Actual file download (after domain verification)
+// @access  Public (requires valid signature for domain-locked files)
 router.get('/:fileId/download', async (req, res) => {
     try {
         const { fileId } = req.params;
-        const { token, t } = req.query;
+        const { t, sig } = req.query;
 
         const file = await File.findOne({ fileId, isActive: true });
         if (!file) {
             return res.status(404).json({ success: false, message: 'File not found' });
         }
 
-        // If file has domain lock, verify token
+        // Verify signature for domain-locked files
         if (file.allowedDomain && file.allowedDomain.trim() !== '') {
-            if (!token || !t) {
-                return res.status(403).json({ success: false, message: 'Access denied: invalid token' });
-            }
-
-            // Check token validity
-            const storedToken = global._downloadTokens?.get(token);
-            if (!storedToken || storedToken.fileId !== fileId || storedToken.expiry < Date.now()) {
+            if (!verifySignature(fileId, t, sig)) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Access denied: token expired or invalid. Please go back to the website and try again.'
+                    message: 'Access denied: signature expired or invalid. Please go back to the website and click the download link again.'
                 });
             }
-
-            // Clean up used token
-            global._downloadTokens.delete(token);
         }
 
         return await serveFile(req, res, file);
@@ -172,21 +166,20 @@ async function serveFile(req, res, file) {
         downloadName = `${brand}_${file.originalName}`;
     }
 
-    // Increment download count (async, don't wait)
+    // Increment download count
     file.incrementDownload().catch(err => console.error('Download count error:', err));
 
-    // Supabase: Redirect with ?download=filename for custom download name
+    // Supabase: Redirect with ?download=filename
     if (file.storageType === 'supabase' || STORAGE_TYPE === 'supabase') {
         const publicUrl = getSupabasePublicUrl(file.storageKey);
         if (publicUrl) {
-            // Supabase supports ?download=filename to force Content-Disposition
             const separator = publicUrl.includes('?') ? '&' : '?';
             const downloadUrl = `${publicUrl}${separator}download=${encodeURIComponent(downloadName)}`;
             return res.redirect(downloadUrl);
         }
     }
 
-    // Local/R2 storage: stream directly
+    // Local/R2 storage
     const { stream, contentType, contentLength } = await downloadFile(file.storageKey);
     res.setHeader('Content-Type', contentType || file.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
@@ -206,10 +199,7 @@ router.get('/:fileId/info', async (req, res) => {
             .select('fileId originalName fileSize downloadCount uploadedAt');
 
         if (!file) {
-            return res.status(404).json({
-                success: false,
-                message: 'File not found'
-            });
+            return res.status(404).json({ success: false, message: 'File not found' });
         }
 
         res.json({
@@ -224,10 +214,7 @@ router.get('/:fileId/info', async (req, res) => {
         });
     } catch (error) {
         console.error('File info error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error fetching file info'
-        });
+        res.status(500).json({ success: false, message: 'Server error fetching file info' });
     }
 });
 
