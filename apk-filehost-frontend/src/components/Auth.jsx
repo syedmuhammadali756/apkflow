@@ -242,21 +242,28 @@ const Auth = ({ mode = 'login' }) => {
                             <div className="auth-pending-card">
                                 <Check size={20} className="auth-pending-check" />
                                 <div>
-                                    <strong>Email Verified</strong>
+                                    <strong>Email Verified ✅</strong>
                                     <span>{formData.email}</span>
                                 </div>
                             </div>
                             <div className="auth-pending-card">
                                 <Clock size={20} className="auth-pending-clock" />
                                 <div>
-                                    <strong>Admin Approval</strong>
-                                    <span>An admin will review and approve your account shortly.</span>
+                                    <strong>Waiting for Admin Approval</strong>
+                                    <span>Your account has been submitted for review. An admin will approve it shortly.</span>
+                                </div>
+                            </div>
+                            <div className="auth-pending-card">
+                                <Mail size={20} className="auth-pending-clock" />
+                                <div>
+                                    <strong>Email Notification</strong>
+                                    <span>You'll receive an email at <strong>{formData.email}</strong> as soon as your account is approved.</span>
                                 </div>
                             </div>
                         </div>
 
                         <p className="auth-pending-note">
-                            You will be able to login once your account is approved. This usually takes a short time.
+                            ⚠️ You cannot login until your account is approved by an admin. Once approved, you'll get an email and can login immediately.
                         </p>
 
                         <button onClick={() => { setIsLogin(true); setRegStep('form'); navigate('/login', { replace: true }); }} className="btn btn-primary btn-lg auth-submit">

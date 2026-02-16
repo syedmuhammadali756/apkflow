@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const File = require('../models/File');
+const { sendApprovalEmail } = require('../utils/emailService');
 
 const ADMIN_CODE = process.env.ADMIN_CODE || 'drwebjr2026';
 const ADMIN_SECRET = process.env.JWT_SECRET + '-admin';
@@ -205,7 +206,13 @@ router.post('/approve/:id', adminAuth, async (req, res) => {
         user.accountStatus = 'approved';
         await user.save();
 
-        res.json({ success: true, message: `User ${user.name} has been approved. They can now login.` });
+        // Send approval notification email to user
+        const emailResult = await sendApprovalEmail(user.email, user.name);
+        if (!emailResult.success) {
+            console.error('Failed to send approval email:', emailResult.error);
+        }
+
+        res.json({ success: true, message: `User ${user.name} has been approved and notified via email.` });
     } catch (error) {
         console.error('Admin approve error:', error);
         res.status(500).json({ success: false, message: 'Server error' });

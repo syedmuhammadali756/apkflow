@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { generateOTP, sendVerificationEmail } = require('../utils/emailService');
+const { generateOTP, sendVerificationEmail, sendAdminNotificationEmail } = require('../utils/emailService');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -172,10 +172,16 @@ router.post('/verify-email', async (req, res) => {
             }
         );
 
+        // Notify admin about new pending account
+        const adminNotif = await sendAdminNotificationEmail(user.name, user.email, user.registrationIP);
+        if (!adminNotif.success) {
+            console.error('Failed to send admin notification:', adminNotif.error);
+        }
+
         res.json({
             success: true,
             step: 'pending_approval',
-            message: 'Email verified successfully! Your account is now pending admin approval. You will be able to login once an admin approves your account.'
+            message: 'Email verified successfully! Your account is now pending admin approval. You will receive an email once your account is approved.'
         });
     } catch (error) {
         console.error('Email verification error:', error);
