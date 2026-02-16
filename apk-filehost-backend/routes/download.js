@@ -5,11 +5,11 @@ const File = require('../models/File');
 const User = require('../models/User');
 const { downloadFromR2 } = require('../utils/r2Storage');
 const { downloadFromLocal } = require('../utils/localStorage');
-const { getSupabasePublicUrl } = require('../utils/supabaseStorage');
+const { getTebiPublicUrl } = require('../utils/tebiStorage');
 
 // Determine storage type
-const STORAGE_TYPE = process.env.SUPABASE_URL ? 'supabase' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
-const downloadFile = STORAGE_TYPE === 'supabase' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
+const STORAGE_TYPE = process.env.TEBI_ACCESS_KEY ? 'tebi' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
+const downloadFile = STORAGE_TYPE === 'tebi' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
 const SECRET = process.env.JWT_SECRET || 'apkflow-download-secret';
 
 // Helper: Get base URL (handles Vercel proxy correctly)
@@ -284,9 +284,9 @@ async function serveFile(req, res, file) {
   // Increment download count
   file.incrementDownload().catch(err => console.error('Download count error:', err));
 
-  // Supabase: Redirect with ?download=filename
-  if (file.storageType === 'supabase' || STORAGE_TYPE === 'supabase') {
-    const publicUrl = getSupabasePublicUrl(file.storageKey);
+  // Tebi/Supabase: Redirect to public URL with download param
+  if (file.storageType === 'tebi' || STORAGE_TYPE === 'tebi') {
+    const publicUrl = getTebiPublicUrl(file.storageKey);
     if (publicUrl) {
       const separator = publicUrl.includes('?') ? '&' : '?';
       const downloadUrl = `${publicUrl}${separator}download=${encodeURIComponent(downloadName)}`;

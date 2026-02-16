@@ -5,16 +5,15 @@ const { nanoid } = require('nanoid');
 const auth = require('../middleware/auth');
 const { uploadToLocal, deleteFromLocal } = require('../utils/localStorage');
 const { uploadToR2, deleteFromR2 } = require('../utils/r2Storage');
+const { uploadToTebi, deleteFromTebi, getPresignedUploadUrl } = require('../utils/tebiStorage');
 const File = require('../models/File');
 const User = require('../models/User');
 
-const { uploadToSupabase, deleteFromSupabase } = require('../utils/supabaseStorage');
+// Determine storage type (Tebi > R2 > Local)
+const STORAGE_TYPE = process.env.TEBI_ACCESS_KEY ? 'tebi' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
 
-// Determine storage type
-const STORAGE_TYPE = process.env.SUPABASE_URL ? 'supabase' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
-
-const uploadFile = STORAGE_TYPE === 'supabase' ? uploadToSupabase : (STORAGE_TYPE === 'r2' ? uploadToR2 : uploadToLocal);
-const deleteFile = STORAGE_TYPE === 'supabase' ? deleteFromSupabase : (STORAGE_TYPE === 'r2' ? deleteFromR2 : deleteFromLocal);
+const uploadFile = STORAGE_TYPE === 'tebi' ? uploadToTebi : (STORAGE_TYPE === 'r2' ? uploadToR2 : uploadToLocal);
+const deleteFile = STORAGE_TYPE === 'tebi' ? deleteFromTebi : (STORAGE_TYPE === 'r2' ? deleteFromR2 : deleteFromLocal);
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -56,13 +55,13 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 
         let originalName, fileSize, mimetype, storageKey, storageType;
 
-        // Mode 1: Frontend uploaded directly to Supabase, sending metadata only
+        // Mode 1: Frontend uploaded directly to Tebi/Supabase, sending metadata only
         if (req.body.storageKey && req.body.fileUrl) {
             originalName = req.body.originalName;
             fileSize = parseInt(req.body.fileSize);
             mimetype = req.body.mimetype || 'application/octet-stream';
             storageKey = req.body.storageKey;
-            storageType = 'supabase';
+            storageType = req.body.storageType || 'tebi';
         }
         // Mode 2: Classic multipart file upload
         else if (req.file) {
@@ -309,6 +308,43 @@ router.use((error, req, res, next) => {
         }
     }
     next(error);
+});
+// @route   POST /api/files/presign
+// @desc    Get presigned URL for direct upload to Tebi.io
+// @access  Private
+router.post('/presign', auth, async (req, res) => {
+    try {
+        const { fileName, contentType } = req.body;
+
+        if (!fileName) {
+            return res.status(400).json({ success: false, message: 'fileName is required' });
+        }
+
+        // Check upload limit
+        const currentFileCount = await File.countDocuments({ userId: req.userId, isActive: true });
+        if (currentFileCount >= 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Upload limit reached. Free accounts are limited to 3 files.'
+            });
+        }
+
+        const fileExt = fileName.split('.').pop();
+        const storageKey = `uploads/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const mime = contentType || 'application/octet-stream';
+
+        const presignData = await getPresignedUploadUrl(storageKey, mime);
+
+        res.json({
+            success: true,
+            uploadUrl: presignData.uploadUrl,
+            storageKey: presignData.storageKey,
+            publicUrl: presignData.publicUrl
+        });
+    } catch (error) {
+        console.error('Presign error:', error);
+        res.status(500).json({ success: false, message: 'Failed to generate upload URL' });
+    }
 });
 
 module.exports = router;

@@ -59,44 +59,35 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
         setProgress(0);
 
         try {
-            // 1. Direct Upload to Supabase using Axios for Progress Tracking
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            const filePath = `uploads/${fileName}`;
+            // 1. Get presigned upload URL from backend
+            const presignRes = await axios.post(`${API_URL}/api/files/presign`, {
+                fileName: file.name,
+                contentType: file.type || 'application/octet-stream'
+            }, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
 
-            // Get Supabase config from env
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-            const bucketName = 'apk-files';
+            const { uploadUrl, storageKey, publicUrl } = presignRes.data;
 
-            // Upload via Axios to get progress events
-            await axios.post(
-                `${supabaseUrl}/storage/v1/object/${bucketName}/${filePath}`,
-                file,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${supabaseKey}`,
-                        'Content-Type': file.type || 'application/octet-stream',
-                        'x-upsert': 'false'
-                    },
-                    onUploadProgress: (progressEvent) => {
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        setProgress(percentCompleted);
-                    }
+            // 2. Upload directly to Tebi.io using presigned URL (with progress)
+            await axios.put(uploadUrl, file, {
+                headers: {
+                    'Content-Type': file.type || 'application/octet-stream',
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percentCompleted);
                 }
-            );
-
-            // 2. Get Public URL (Manual construction)
-            const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`;
+            });
 
             // 3. Save Metadata to Backend
             const response = await axios.post(`${API_URL}/api/files/upload`, {
                 originalName: file.name,
                 fileSize: file.size,
                 mimetype: file.type,
-                storageKey: filePath,
+                storageKey: storageKey,
                 fileUrl: publicUrl,
-                storageType: 'supabase',
+                storageType: 'tebi',
                 customName: customName.trim(),
                 brandName: brandName.trim(),
                 allowedDomain: isDomainLocked ? allowedDomain.trim() : ''
