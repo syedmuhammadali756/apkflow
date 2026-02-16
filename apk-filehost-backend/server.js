@@ -1,6 +1,12 @@
-// Force Google DNS for MongoDB Atlas SRV resolution
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Force Google DNS for MongoDB Atlas SRV resolution (local only)
+try {
+  const dns = require('dns');
+  if (process.env.NODE_ENV !== 'production') {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  }
+} catch (e) {
+  // Ignore DNS errors in serverless environments
+}
 
 require('dotenv').config();
 const express = require('express');
