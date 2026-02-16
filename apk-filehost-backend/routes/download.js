@@ -172,40 +172,27 @@ async function serveFile(req, res, file) {
         downloadName = `${brand}_${file.originalName}`;
     }
 
-    // Proxy download from Supabase
+    // Increment download count (async, don't wait)
+    file.incrementDownload().catch(err => console.error('Download count error:', err));
+
+    // Supabase: Redirect with ?download=filename for custom download name
     if (file.storageType === 'supabase' || STORAGE_TYPE === 'supabase') {
         const publicUrl = getSupabasePublicUrl(file.storageKey);
         if (publicUrl) {
-            try {
-                const fetch = (await import('node-fetch')).default;
-                const supaResponse = await fetch(publicUrl);
-                if (!supaResponse.ok) throw new Error(`Supabase returned ${supaResponse.status}`);
-
-                res.setHeader('Content-Type', file.mimeType || 'application/vnd.android.package-archive');
-                res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
-                if (supaResponse.headers.get('content-length')) {
-                    res.setHeader('Content-Length', supaResponse.headers.get('content-length'));
-                }
-                res.setHeader('Cache-Control', 'public, max-age=86400');
-                supaResponse.body.pipe(res);
-                file.incrementDownload().catch(err => console.error('Download count error:', err));
-                return;
-            } catch (proxyError) {
-                console.error('Proxy download error:', proxyError);
-                file.incrementDownload().catch(err => console.error('Download count error:', err));
-                return res.redirect(publicUrl);
-            }
+            // Supabase supports ?download=filename to force Content-Disposition
+            const separator = publicUrl.includes('?') ? '&' : '?';
+            const downloadUrl = `${publicUrl}${separator}download=${encodeURIComponent(downloadName)}`;
+            return res.redirect(downloadUrl);
         }
     }
 
-    // Local/R2 storage
+    // Local/R2 storage: stream directly
     const { stream, contentType, contentLength } = await downloadFile(file.storageKey);
     res.setHeader('Content-Type', contentType || file.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
     res.setHeader('Content-Length', contentLength || file.fileSize);
     res.setHeader('Cache-Control', 'public, max-age=86400');
     stream.pipe(res);
-    file.incrementDownload().catch(err => console.error('Download count error:', err));
 }
 
 // @route   GET /d/:fileId/info
