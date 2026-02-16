@@ -94,9 +94,7 @@ router.get('/:fileId', async (req, res) => {
     } else {
       var el = document.getElementById("error");
       el.style.display = "block";
-      el.textContent = "⛔ Access Denied — This download is restricted to " + allowed + " only.";
-      if (ref) el.textContent += " (Your source: " + refHost + ")";
-      else el.textContent += " (No referring website detected. Please visit the download page from the authorized website.)";
+      el.innerHTML = "⚠️ <strong>Access Denied</strong><br>Please initiate the download from the official website.<br><span style='font-size:12px;opacity:0.8;font-weight:400;margin-top:4px;display:block'>Direct links and unauthorized sources are not supported.</span>";
     }
   }, 1200);
 })();
