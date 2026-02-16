@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Folder, Package, Download, Copy, Trash, Check, Clock, Search, Edit, X } from './Icons';
+import { Folder, Package, Download, Copy, Trash, Check, Clock, Search, Edit, X, Globe, Shield } from './Icons';
 import './FileList.css';
 
 const FileList = ({ files, onDelete, onRename }) => {
@@ -170,6 +170,26 @@ const FileList = ({ files, onDelete, onRename }) => {
                                             <Clock size={12} /> {formatDate(file.uploadedAt)}
                                         </span>
                                     </div>
+                                    {/* File Detail Badges */}
+                                    {(file.customName || file.brandName || file.allowedDomain) && (
+                                        <div className="file-detail-badges">
+                                            {file.customName && (
+                                                <span className="detail-badge badge-name" title="Custom download name">
+                                                    <Package size={11} /> {file.customName}
+                                                </span>
+                                            )}
+                                            {file.brandName && (
+                                                <span className="detail-badge badge-brand" title="Brand name">
+                                                    <Globe size={11} /> {file.brandName}
+                                                </span>
+                                            )}
+                                            {file.allowedDomain && (
+                                                <span className="detail-badge badge-domain" title="Restricted to this domain">
+                                                    <Shield size={11} /> {file.allowedDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
