@@ -40,31 +40,34 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Check IP restriction — one account per IP (only check approved/pending accounts)
-        if (clientIP) {
-            const ipUser = await User.findOne({
-                registrationIP: clientIP,
-                accountStatus: { $in: ['pending_verification', 'pending_approval', 'approved'] }
-            });
-            if (ipUser) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'An account has already been registered from this network. Only one account per device/network is allowed.'
-                });
-            }
-        }
+        // Admin email is exempt from IP/device restrictions
+        const ADMIN_EMAILS = ['syedmuhammadalibukhari756@gmail.com'];
+        const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
 
-        // Check device fingerprint restriction
-        if (deviceFingerprint) {
-            const fpUser = await User.findOne({
-                deviceFingerprint: deviceFingerprint,
-                accountStatus: { $in: ['pending_verification', 'pending_approval', 'approved'] }
-            });
-            if (fpUser) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'An account has already been registered from this device. Only one account per device is allowed.'
+        // Check IP and device fingerprint restriction — one account per IP and per device
+        if (!isAdminEmail) {
+            const restrictionQuery = [];
+            if (clientIP) {
+                restrictionQuery.push({ registrationIP: clientIP });
+            }
+            if (deviceFingerprint) {
+                restrictionQuery.push({ deviceFingerprint: deviceFingerprint });
+            }
+
+            if (restrictionQuery.length > 0) {
+                const existingAccount = await User.findOne({
+                    $or: restrictionQuery,
+                    accountStatus: { $in: ['pending_verification', 'pending_approval', 'approved'] }
                 });
+                if (existingAccount) {
+                    const reason = existingAccount.registrationIP === clientIP
+                        ? 'this network/IP address'
+                        : 'this device';
+                    return res.status(403).json({
+                        success: false,
+                        message: `An account has already been registered from ${reason}. Only one account per device and network is allowed. If you believe this is an error, please contact support.`
+                    });
+                }
             }
         }
 

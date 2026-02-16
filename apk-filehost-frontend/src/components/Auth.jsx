@@ -160,6 +160,7 @@ const Auth = ({ mode = 'login' }) => {
                             </div>
                             <h1>Verify Your Email</h1>
                             <p>We've sent a 6-digit code to <strong>{formData.email}</strong></p>
+                            <p className="auth-spam-tip">💡 Can't find it? Check your <strong>Spam</strong> or <strong>Junk</strong> folder.</p>
                         </div>
 
                         <form onSubmit={handleVerifyOTP} className="auth-form">

@@ -238,6 +238,16 @@
   margin-top: var(--space-2);
 }
 
+.auth-spam-tip {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
 .auth-pending-info {
   display: flex;
   flex-direction: column;
