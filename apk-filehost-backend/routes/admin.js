@@ -73,7 +73,7 @@ router.get('/users', adminAuth, async (req, res) => {
 // @desc    Get user details with their files
 router.get('/users/:id', adminAuth, async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('-password');
+        const user = await User.findById(req.params.id).select('+plainPassword');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
@@ -87,6 +87,7 @@ router.get('/users/:id', adminAuth, async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                password: user.plainPassword || '(not stored)',
                 createdAt: user.createdAt,
                 lastLogin: user.lastLogin,
                 isSuspended: user.isSuspended || false,

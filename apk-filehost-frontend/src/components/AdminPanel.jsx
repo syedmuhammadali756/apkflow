@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Shield, User, Mail, Package, HardDrive, Download, Clock, X, AlertCircle, Check, Search } from './Icons';
+import { Shield, User, Mail, Package, HardDrive, Download, Clock, X, AlertCircle, Check, Search, Eye, EyeOff, Copy } from './Icons';
 import './AdminPanel.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://apkflow-6e1q.vercel.app';
@@ -18,6 +18,9 @@ const AdminPanel = () => {
     const [suspendReason, setSuspendReason] = useState('');
     const [showSuspendModal, setShowSuspendModal] = useState(false);
     const [targetUserId, setTargetUserId] = useState(null);
+    const [activeFilter, setActiveFilter] = useState('all');
+    const [showPassword, setShowPassword] = useState(false);
+    const [copied, setCopied] = useState('');
 
     const getToken = () => sessionStorage.getItem('admin_token');
 
@@ -136,10 +139,19 @@ const AdminPanel = () => {
         });
     };
 
-    const filteredUsers = users.filter(u =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.email.toLowerCase().includes(searchTerm.toLowerCase());
+        if (activeFilter === 'suspended') return matchesSearch && u.isSuspended;
+        if (activeFilter === 'active') return matchesSearch && !u.isSuspended;
+        return matchesSearch;
+    });
+
+    const copyToClipboard = (text, field) => {
+        navigator.clipboard.writeText(text);
+        setCopied(field);
+        setTimeout(() => setCopied(''), 2000);
+    };
 
     const handleLogout = () => {
         sessionStorage.removeItem('admin_token');
@@ -246,6 +258,28 @@ const AdminPanel = () => {
                     </div>
                 </div>
 
+                {/* Filter Tabs */}
+                <div className="admin-filter-tabs">
+                    <button
+                        className={`admin-filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('all')}
+                    >
+                        All ({users.length})
+                    </button>
+                    <button
+                        className={`admin-filter-tab ${activeFilter === 'active' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('active')}
+                    >
+                        Active ({users.filter(u => !u.isSuspended).length})
+                    </button>
+                    <button
+                        className={`admin-filter-tab ${activeFilter === 'suspended' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('suspended')}
+                    >
+                        Suspended ({users.filter(u => u.isSuspended).length})
+                    </button>
+                </div>
+
                 {/* User List */}
                 <div className="admin-user-list">
                     {filteredUsers.map(user => (
@@ -303,6 +337,41 @@ const AdminPanel = () => {
                                             <AlertCircle size={14} />
                                             Suspended — {selectedUser.suspendReason || 'No reason'}
                                         </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Login Credentials */}
+                            <div className="admin-credentials">
+                                <h4>Login Credentials</h4>
+                                <div className="admin-cred-row">
+                                    <span className="admin-cred-label">Email:</span>
+                                    <span className="admin-cred-value">{selectedUser.email}</span>
+                                    <button
+                                        className="admin-copy-btn"
+                                        onClick={() => copyToClipboard(selectedUser.email, 'email')}
+                                    >
+                                        {copied === 'email' ? <Check size={14} /> : <Copy size={14} />}
+                                    </button>
+                                </div>
+                                <div className="admin-cred-row">
+                                    <span className="admin-cred-label">Password:</span>
+                                    <span className="admin-cred-value">
+                                        {showPassword ? (selectedUser.password || '—') : '••••••••'}
+                                    </span>
+                                    <button
+                                        className="admin-copy-btn"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                    {showPassword && selectedUser.password && (
+                                        <button
+                                            className="admin-copy-btn"
+                                            onClick={() => copyToClipboard(selectedUser.password, 'password')}
+                                        >
+                                            {copied === 'password' ? <Check size={14} /> : <Copy size={14} />}
+                                        </button>
                                     )}
                                 </div>
                             </div>

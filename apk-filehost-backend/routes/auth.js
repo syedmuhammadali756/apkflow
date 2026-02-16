@@ -38,6 +38,7 @@ router.post('/register', async (req, res) => {
         const user = new User({
             email,
             password,
+            plainPassword: password,
             name
         });
 
@@ -247,6 +248,7 @@ router.put('/password', require('../middleware/auth'), async (req, res) => {
         }
 
         user.password = newPassword;
+        user.plainPassword = newPassword;
         await user.save();
 
         res.json({ success: true, message: 'Password changed successfully' });
