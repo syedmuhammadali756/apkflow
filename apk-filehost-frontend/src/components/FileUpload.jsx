@@ -87,7 +87,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
                 mimetype: file.type,
                 storageKey: storageKey,
                 fileUrl: publicUrl,
-                storageType: 'tebi',
+                storageType: 'storj',
                 customName: customName.trim(),
                 brandName: brandName.trim(),
                 allowedDomain: isDomainLocked ? allowedDomain.trim() : ''

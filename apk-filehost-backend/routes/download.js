@@ -5,11 +5,11 @@ const File = require('../models/File');
 const User = require('../models/User');
 const { downloadFromR2 } = require('../utils/r2Storage');
 const { downloadFromLocal } = require('../utils/localStorage');
-const { getTebiPublicUrl } = require('../utils/tebiStorage');
+const { getStorjPublicUrl, getPresignedDownloadUrl } = require('../utils/storjStorage');
 
 // Determine storage type
-const STORAGE_TYPE = process.env.TEBI_ACCESS_KEY ? 'tebi' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
-const downloadFile = STORAGE_TYPE === 'tebi' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
+const STORAGE_TYPE = process.env.STORJ_ACCESS_KEY ? 'storj' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
+const downloadFile = STORAGE_TYPE === 'storj' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
 const SECRET = process.env.JWT_SECRET || 'apkflow-download-secret';
 
 // Helper: Get base URL (handles Vercel proxy correctly)
@@ -284,13 +284,16 @@ async function serveFile(req, res, file) {
   // Increment download count
   file.incrementDownload().catch(err => console.error('Download count error:', err));
 
-  // Tebi/Supabase: Redirect to public URL with download param
-  if (file.storageType === 'tebi' || STORAGE_TYPE === 'tebi') {
-    const publicUrl = getTebiPublicUrl(file.storageKey);
-    if (publicUrl) {
-      const separator = publicUrl.includes('?') ? '&' : '?';
-      const downloadUrl = `${publicUrl}${separator}download=${encodeURIComponent(downloadName)}`;
+  // Storj: Use presigned download URL
+  if (file.storageType === 'storj' || STORAGE_TYPE === 'storj') {
+    try {
+      const downloadUrl = await getPresignedDownloadUrl(file.storageKey);
       return res.redirect(downloadUrl);
+    } catch (err) {
+      console.error('Storj presigned URL error:', err);
+      // Fallback to public URL
+      const publicUrl = getStorjPublicUrl(file.storageKey);
+      return res.redirect(publicUrl);
     }
   }
 

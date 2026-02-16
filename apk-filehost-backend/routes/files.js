@@ -5,15 +5,15 @@ const { nanoid } = require('nanoid');
 const auth = require('../middleware/auth');
 const { uploadToLocal, deleteFromLocal } = require('../utils/localStorage');
 const { uploadToR2, deleteFromR2 } = require('../utils/r2Storage');
-const { uploadToTebi, deleteFromTebi, getPresignedUploadUrl } = require('../utils/tebiStorage');
+const { uploadToStorj, deleteFromStorj, getPresignedUploadUrl } = require('../utils/storjStorage');
 const File = require('../models/File');
 const User = require('../models/User');
 
-// Determine storage type (Tebi > R2 > Local)
-const STORAGE_TYPE = process.env.TEBI_ACCESS_KEY ? 'tebi' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
+// Determine storage type (Storj > R2 > Local)
+const STORAGE_TYPE = process.env.STORJ_ACCESS_KEY ? 'storj' : (process.env.R2_ACCESS_KEY_ID ? 'r2' : 'local');
 
-const uploadFile = STORAGE_TYPE === 'tebi' ? uploadToTebi : (STORAGE_TYPE === 'r2' ? uploadToR2 : uploadToLocal);
-const deleteFile = STORAGE_TYPE === 'tebi' ? deleteFromTebi : (STORAGE_TYPE === 'r2' ? deleteFromR2 : deleteFromLocal);
+const uploadFile = STORAGE_TYPE === 'storj' ? uploadToStorj : (STORAGE_TYPE === 'r2' ? uploadToR2 : uploadToLocal);
+const deleteFile = STORAGE_TYPE === 'storj' ? deleteFromStorj : (STORAGE_TYPE === 'r2' ? deleteFromR2 : deleteFromLocal);
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -61,7 +61,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
             fileSize = parseInt(req.body.fileSize);
             mimetype = req.body.mimetype || 'application/octet-stream';
             storageKey = req.body.storageKey;
-            storageType = req.body.storageType || 'tebi';
+            storageType = req.body.storageType || 'storj';
         }
         // Mode 2: Classic multipart file upload
         else if (req.file) {
