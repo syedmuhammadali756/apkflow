@@ -21,6 +21,7 @@ const AdminPanel = () => {
     const [activeFilter, setActiveFilter] = useState('all');
     const [showPassword, setShowPassword] = useState(false);
     const [copied, setCopied] = useState('');
+    const [pendingUsers, setPendingUsers] = useState([]);
 
     const getToken = () => sessionStorage.getItem('admin_token');
 
@@ -44,6 +45,7 @@ const AdminPanel = () => {
             sessionStorage.setItem('admin_token', res.data.token);
             setIsAuthenticated(true);
             fetchUsers();
+            fetchPendingUsers();
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid code');
         } finally {
@@ -57,6 +59,7 @@ const AdminPanel = () => {
         if (token) {
             setIsAuthenticated(true);
             fetchUsers();
+            fetchPendingUsers();
         }
     }, []);
 
@@ -70,6 +73,44 @@ const AdminPanel = () => {
                 sessionStorage.removeItem('admin_token');
                 setIsAuthenticated(false);
             }
+        }
+    };
+
+    // Fetch pending approval users
+    const fetchPendingUsers = async () => {
+        try {
+            const res = await adminApi.get('/api/admin/pending');
+            if (res.data.success) setPendingUsers(res.data.users);
+        } catch (err) {
+            console.error('Error fetching pending users:', err);
+        }
+    };
+
+    // Approve user
+    const handleApprove = async (userId) => {
+        setActionLoading(true);
+        try {
+            await adminApi.post(`/api/admin/approve/${userId}`);
+            fetchPendingUsers();
+            fetchUsers();
+        } catch (err) {
+            console.error('Approve error:', err);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Reject user
+    const handleReject = async (userId) => {
+        setActionLoading(true);
+        try {
+            await adminApi.post(`/api/admin/reject/${userId}`);
+            fetchPendingUsers();
+            fetchUsers();
+        } catch (err) {
+            console.error('Reject error:', err);
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -144,6 +185,7 @@ const AdminPanel = () => {
             u.email.toLowerCase().includes(searchTerm.toLowerCase());
         if (activeFilter === 'suspended') return matchesSearch && u.isSuspended;
         if (activeFilter === 'active') return matchesSearch && !u.isSuspended;
+        if (activeFilter === 'pending') return matchesSearch && (u.accountStatus === 'pending_approval' || u.accountStatus === 'pending_verification');
         return matchesSearch;
     });
 
@@ -243,6 +285,13 @@ const AdminPanel = () => {
                         </div>
                     </div>
                     <div className="admin-stat">
+                        <Clock size={18} />
+                        <div>
+                            <span className="admin-stat-val">{pendingUsers.length}</span>
+                            <span className="admin-stat-label">Pending</span>
+                        </div>
+                    </div>
+                    <div className="admin-stat">
                         <Package size={18} />
                         <div>
                             <span className="admin-stat-val">{users.reduce((s, u) => s + u.stats.totalFiles, 0)}</span>
@@ -278,7 +327,54 @@ const AdminPanel = () => {
                     >
                         Suspended ({users.filter(u => u.isSuspended).length})
                     </button>
+                    <button
+                        className={`admin-filter-tab ${activeFilter === 'pending' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('pending')}
+                    >
+                        Pending ({pendingUsers.length})
+                    </button>
                 </div>
+
+                {/* Pending Approvals Section */}
+                {activeFilter === 'pending' && pendingUsers.length > 0 && (
+                    <div className="admin-pending-section">
+                        <h3 className="admin-pending-title">
+                            <Clock size={18} /> Pending Approvals ({pendingUsers.length})
+                        </h3>
+                        <div className="admin-pending-list">
+                            {pendingUsers.map(u => (
+                                <div key={u.id} className="admin-pending-card">
+                                    <div className="admin-user-avatar">
+                                        {u.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                    <div className="admin-pending-info">
+                                        <strong>{u.name}</strong>
+                                        <span>{u.email}</span>
+                                        <span className="admin-pending-meta">
+                                            IP: {u.registrationIP || 'N/A'} · Registered: {formatDate(u.createdAt)}
+                                        </span>
+                                    </div>
+                                    <div className="admin-pending-actions">
+                                        <button
+                                            className="admin-btn admin-btn-success admin-btn-sm"
+                                            onClick={() => handleApprove(u.id)}
+                                            disabled={actionLoading}
+                                        >
+                                            <Check size={14} /> Approve
+                                        </button>
+                                        <button
+                                            className="admin-btn admin-btn-danger admin-btn-sm"
+                                            onClick={() => handleReject(u.id)}
+                                            disabled={actionLoading}
+                                        >
+                                            <X size={14} /> Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* User List */}
                 <div className="admin-user-list">
@@ -295,6 +391,9 @@ const AdminPanel = () => {
                                 <div className="admin-user-name">
                                     {user.name}
                                     {user.isSuspended && <span className="badge-suspended">Suspended</span>}
+                                    {user.accountStatus === 'pending_approval' && <span className="badge-pending">Pending</span>}
+                                    {user.accountStatus === 'pending_verification' && <span className="badge-unverified">Unverified</span>}
+                                    {user.accountStatus === 'rejected' && <span className="badge-rejected">Rejected</span>}
                                 </div>
                                 <div className="admin-user-email">{user.email}</div>
                             </div>

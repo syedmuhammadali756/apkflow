@@ -58,6 +58,10 @@ router.get('/users', adminAuth, async (req, res) => {
                 isSuspended: user.isSuspended || false,
                 suspendedAt: user.suspendedAt,
                 suspendReason: user.suspendReason || '',
+                accountStatus: user.accountStatus || 'approved',
+                isEmailVerified: user.isEmailVerified || false,
+                registrationIP: user.registrationIP || '',
+                deviceFingerprint: user.deviceFingerprint || '',
                 stats: { totalFiles, totalStorage, totalDownloads }
             };
         }));
@@ -92,7 +96,11 @@ router.get('/users/:id', adminAuth, async (req, res) => {
                 lastLogin: user.lastLogin,
                 isSuspended: user.isSuspended || false,
                 suspendedAt: user.suspendedAt,
-                suspendReason: user.suspendReason || ''
+                suspendReason: user.suspendReason || '',
+                accountStatus: user.accountStatus || 'approved',
+                isEmailVerified: user.isEmailVerified || false,
+                registrationIP: user.registrationIP || '',
+                deviceFingerprint: user.deviceFingerprint || ''
             },
             files: files.map(f => ({
                 id: f._id,
@@ -156,6 +164,69 @@ router.post('/users/:id/unsuspend', adminAuth, async (req, res) => {
         res.json({ success: true, message: `User ${user.name} has been unsuspended` });
     } catch (error) {
         console.error('Admin unsuspend error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   GET /api/admin/pending
+// @desc    Get all users pending approval
+router.get('/pending', adminAuth, async (req, res) => {
+    try {
+        const pendingUsers = await User.find({ accountStatus: 'pending_approval' })
+            .select('-password')
+            .sort({ createdAt: -1 });
+
+        const users = pendingUsers.map(u => ({
+            id: u._id,
+            name: u.name,
+            email: u.email,
+            createdAt: u.createdAt,
+            registrationIP: u.registrationIP || '',
+            deviceFingerprint: u.deviceFingerprint || '',
+            isEmailVerified: u.isEmailVerified || false
+        }));
+
+        res.json({ success: true, users, total: users.length });
+    } catch (error) {
+        console.error('Admin pending users error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   POST /api/admin/approve/:id
+// @desc    Approve a pending user account
+router.post('/approve/:id', adminAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        user.accountStatus = 'approved';
+        await user.save();
+
+        res.json({ success: true, message: `User ${user.name} has been approved. They can now login.` });
+    } catch (error) {
+        console.error('Admin approve error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   POST /api/admin/reject/:id
+// @desc    Reject a pending user account
+router.post('/reject/:id', adminAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        user.accountStatus = 'rejected';
+        await user.save();
+
+        res.json({ success: true, message: `User ${user.name} has been rejected.` });
+    } catch (error) {
+        console.error('Admin reject error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

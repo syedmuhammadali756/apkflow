@@ -53,6 +53,31 @@ const userSchema = new mongoose.Schema({
     suspendReason: {
         type: String,
         default: ''
+    },
+    accountStatus: {
+        type: String,
+        enum: ['pending_verification', 'pending_approval', 'approved', 'rejected'],
+        default: 'pending_verification'
+    },
+    verificationCode: {
+        type: String,
+        select: false
+    },
+    verificationCodeExpiry: {
+        type: Date,
+        select: false
+    },
+    registrationIP: {
+        type: String,
+        default: ''
+    },
+    deviceFingerprint: {
+        type: String,
+        default: ''
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

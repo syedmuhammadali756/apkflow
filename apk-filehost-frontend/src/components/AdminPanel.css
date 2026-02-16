@@ -217,7 +217,7 @@
 /* Stats Row */
 .admin-stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: var(--space-3);
     margin-bottom: var(--space-6);
 }
@@ -309,6 +309,33 @@
 }
 
 .badge-suspended {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+.badge-pending {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+.badge-unverified {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+.badge-rejected {
     font-size: 10px;
     padding: 2px 8px;
     background: rgba(239, 68, 68, 0.15);
@@ -660,6 +687,74 @@
     .admin-stats-row {
         grid-template-columns: 1fr;
     }
+}
+
+/* Pending Approvals Section */
+.admin-pending-section {
+    margin-bottom: var(--space-6);
+    padding: var(--space-5);
+    background: rgba(245, 158, 11, 0.04);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    border-radius: var(--radius-lg);
+}
+
+.admin-pending-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: #f59e0b;
+    margin-bottom: var(--space-4);
+}
+
+.admin-pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.admin-pending-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+}
+
+.admin-pending-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-pending-info strong {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+}
+
+.admin-pending-info span {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+}
+
+.admin-pending-meta {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+}
+
+.admin-pending-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.admin-btn-sm {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
 }
 
 /* Filter Tabs */

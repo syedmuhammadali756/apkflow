@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { generateOTP, sendVerificationEmail } = require('../utils/emailService');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public
 router.post('/register', async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { email, password, name, deviceFingerprint } = req.body;
 
         // Validation
         if (!email || !password || !name) {
@@ -25,7 +26,12 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Check if user already exists
+        // Get client IP
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+            req.headers['x-real-ip'] ||
+            req.connection?.remoteAddress || '';
+
+        // Check if user already exists with this email
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
@@ -34,35 +40,65 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Create new user
+        // Check IP restriction — one account per IP (only check approved/pending accounts)
+        if (clientIP) {
+            const ipUser = await User.findOne({
+                registrationIP: clientIP,
+                accountStatus: { $in: ['pending_verification', 'pending_approval', 'approved'] }
+            });
+            if (ipUser) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'An account has already been registered from this network. Only one account per device/network is allowed.'
+                });
+            }
+        }
+
+        // Check device fingerprint restriction
+        if (deviceFingerprint) {
+            const fpUser = await User.findOne({
+                deviceFingerprint: deviceFingerprint,
+                accountStatus: { $in: ['pending_verification', 'pending_approval', 'approved'] }
+            });
+            if (fpUser) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'An account has already been registered from this device. Only one account per device is allowed.'
+                });
+            }
+        }
+
+        // Generate verification code
+        const verificationCode = generateOTP();
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        // Create new user with pending status
         const user = new User({
             email,
             password,
             plainPassword: password,
-            name
+            name,
+            registrationIP: clientIP,
+            deviceFingerprint: deviceFingerprint || '',
+            accountStatus: 'pending_verification',
+            verificationCode,
+            verificationCodeExpiry,
+            isEmailVerified: false
         });
 
         await user.save();
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        // Send verification email
+        const emailResult = await sendVerificationEmail(email, verificationCode, name);
+        if (!emailResult.success) {
+            console.error('Failed to send verification email:', emailResult.error);
+        }
 
         res.status(201).json({
             success: true,
-            message: 'User registered successfully',
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                storageUsed: user.totalStorageUsed,
-                storageQuota: user.storageQuota,
-                filesCount: user.filesCount
-            }
+            step: 'verify_email',
+            message: 'A verification code has been sent to your email. Please check your inbox.',
+            userId: user._id
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -71,6 +107,117 @@ router.post('/register', async (req, res) => {
             message: 'Server error during registration',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
+    }
+});
+
+// @route   POST /api/auth/verify-email
+// @desc    Verify email with OTP code
+// @access  Public
+router.post('/verify-email', async (req, res) => {
+    try {
+        const { userId, code } = req.body;
+
+        if (!userId || !code) {
+            return res.status(400).json({
+                success: false,
+                message: 'User ID and verification code are required'
+            });
+        }
+
+        const user = await User.findById(userId).select('+verificationCode +verificationCodeExpiry');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is already verified. Waiting for admin approval.'
+            });
+        }
+
+        // Check code expiry
+        if (new Date() > user.verificationCodeExpiry) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification code has expired. Please request a new one.'
+            });
+        }
+
+        // Check code match
+        if (user.verificationCode !== code) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification code. Please try again.'
+            });
+        }
+
+        // Mark email as verified, move to pending approval
+        await User.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    isEmailVerified: true,
+                    accountStatus: 'pending_approval',
+                    verificationCode: null,
+                    verificationCodeExpiry: null
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            step: 'pending_approval',
+            message: 'Email verified successfully! Your account is now pending admin approval. You will be able to login once an admin approves your account.'
+        });
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({ success: false, message: 'Server error during verification' });
+    }
+});
+
+// @route   POST /api/auth/resend-code
+// @desc    Resend verification code
+// @access  Public
+router.post('/resend-code', async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID is required' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(400).json({ success: false, message: 'Email is already verified' });
+        }
+
+        // Generate new code
+        const verificationCode = generateOTP();
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+        await User.updateOne(
+            { _id: user._id },
+            { $set: { verificationCode, verificationCodeExpiry } }
+        );
+
+        // Send email
+        const emailResult = await sendVerificationEmail(user.email, verificationCode, user.name);
+        if (!emailResult.success) {
+            return res.status(500).json({ success: false, message: 'Failed to send verification email' });
+        }
+
+        res.json({
+            success: true,
+            message: 'A new verification code has been sent to your email.'
+        });
+    } catch (error) {
+        console.error('Resend code error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
@@ -114,6 +261,29 @@ router.post('/login', async (req, res) => {
                 message: 'Your account has been suspended. Please contact support for assistance.',
                 suspended: true,
                 reason: user.suspendReason || ''
+            });
+        }
+
+        // Check account status
+        if (user.accountStatus === 'pending_verification') {
+            return res.status(403).json({
+                success: false,
+                message: 'Please verify your email first. Check your inbox for the verification code.',
+                accountStatus: 'pending_verification'
+            });
+        }
+        if (user.accountStatus === 'pending_approval') {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account is pending admin approval. Please wait for approval before logging in.',
+                accountStatus: 'pending_approval'
+            });
+        }
+        if (user.accountStatus === 'rejected') {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account registration has been rejected. Please contact support.',
+                accountStatus: 'rejected'
             });
         }
 

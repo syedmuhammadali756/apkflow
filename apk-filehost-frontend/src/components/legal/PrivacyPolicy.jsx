@@ -38,6 +38,8 @@ const PrivacyPolicy = () => {
                         <ul>
                             <li><strong>Personal Information Provided by You:</strong> We collect names; email addresses; passwords; and other similar information.</li>
                             <li><strong>Credentials:</strong> We collect passwords, password hints, and similar security information used for authentication and account access.</li>
+                            <li><strong>IP Address:</strong> We collect and store your IP address during account registration to prevent abuse and enforce our one-account-per-user policy.</li>
+                            <li><strong>Device Fingerprint:</strong> We generate a non-identifying browser fingerprint (based on screen resolution, timezone, and browser characteristics) to prevent duplicate account creation from the same device.</li>
                             <li><strong>Payment Data:</strong> We do NOT collect payment data as our current services are free.</li>
                         </ul>
                     </div>

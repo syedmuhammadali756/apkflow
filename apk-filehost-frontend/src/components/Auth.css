@@ -211,6 +211,86 @@
   color: var(--text-muted);
 }
 
+/* Multi-step Registration */
+.auth-step-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.15);
+  border: 2px solid rgba(124, 58, 237, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-4);
+  color: var(--brand-primary-light);
+}
+
+.auth-step-success {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.auth-resend {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--space-2);
+}
+
+.auth-pending-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.auth-pending-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+
+.auth-pending-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auth-pending-card strong {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.auth-pending-card span {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.auth-pending-check {
+  color: #22c55e;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.auth-pending-clock {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.auth-pending-note {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-6);
+  line-height: 1.5;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .auth-visual {

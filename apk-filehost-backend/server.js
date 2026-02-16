@@ -23,6 +23,9 @@ const adminRoutes = require('./routes/admin');
 // Initialize Express app
 const app = express();
 
+// Trust proxy for correct IP detection on Vercel
+app.set('trust proxy', true);
+
 // ========== MIDDLEWARE ==========
 app.use(cors({
   origin: function (origin, callback) {
