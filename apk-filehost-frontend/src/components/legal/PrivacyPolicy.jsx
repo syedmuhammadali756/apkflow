@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
                         <p>
                             Welcome to APKFlow ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy.
                             If you have any questions or concerns about our policy, or our practices with regards to your personal information,
-                            please contact us at support@apkflow.com.
+                            please contact us at apkflow.vercel.app@gmail.com.
                         </p>
                         <p>
                             When you visit our website (https://apkflow.com), and use our services, you trust us with your personal information.
@@ -80,7 +80,7 @@ const PrivacyPolicy = () => {
                     <div className="legal-section">
                         <h2><Mail size={24} className="text-primary" /> Contact Us</h2>
                         <p>
-                            If you have questions or comments about this policy, you may email us at support@apkflow.com.
+                            If you have questions or comments about this policy, you may email us at apkflow.vercel.app@gmail.com.
                         </p>
                     </div>
                 </div>

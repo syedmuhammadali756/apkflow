@@ -21,7 +21,7 @@ const Footer = () => {
                             <a href="/" className="social-link" aria-label="Website">
                                 <Globe size={18} />
                             </a>
-                            <a href="mailto:support@apkflow.com" className="social-link" aria-label="Email">
+                            <a href="mailto:apkflow.vercel.app@gmail.com" className="social-link" aria-label="Email">
                                 <Mail size={18} />
                             </a>
                         </div>

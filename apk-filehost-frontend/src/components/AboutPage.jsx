@@ -119,7 +119,7 @@ const AboutPage = () => {
                             </p>
                             <div className="founder-links">
                                 <a href="#" className="social-link"><Globe size={16} /></a>
-                                <a href="#" className="social-link"><Mail size={16} /></a>
+                                <a href="mailto:apkflow.vercel.app@gmail.com" className="social-link"><Mail size={16} /></a>
                             </div>
                         </div>
                     </div>

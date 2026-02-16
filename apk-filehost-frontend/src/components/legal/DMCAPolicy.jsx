@@ -68,7 +68,7 @@ const DMCAPolicy = () => {
                         <p>
                             All DMCA notices should be sent to our designated agent at:
                         </p>
-                        <p><strong>Email:</strong> dmca@apkflow.com</p>
+                        <p><strong>Email:</strong> apkflow.vercel.app@gmail.com</p>
                     </div>
                 </div>
             </div>

@@ -81,7 +81,7 @@ const TermsOfService = () => {
                         <h2><HelpCircle size={24} className="text-primary" /> 5. Contact Us</h2>
                         <p>
                             In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site,
-                            please contact us at support@apkflow.com.
+                            please contact us at apkflow.vercel.app@gmail.com.
                         </p>
                     </div>
                 </div>
