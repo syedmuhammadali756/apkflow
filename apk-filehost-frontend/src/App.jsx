@@ -14,6 +14,7 @@ import './App.css';
 import PrivacyPolicy from './components/legal/PrivacyPolicy';
 import TermsOfService from './components/legal/TermsOfService';
 import DMCAPolicy from './components/legal/DMCAPolicy';
+import AdminPanel from './components/AdminPanel';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -81,6 +82,9 @@ function AppContent() {
       <Route path="/profile" element={
         <ProtectedRoute><Dashboard activePage="profile" /></ProtectedRoute>
       } />
+
+      {/* Admin Panel */}
+      <Route path="/drwebjr.admin" element={<AdminPanel />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />

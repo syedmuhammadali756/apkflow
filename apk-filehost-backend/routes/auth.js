@@ -106,6 +106,16 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        // Check if user is suspended
+        if (user.isSuspended) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been suspended. Please contact support for assistance.',
+                suspended: true,
+                reason: user.suspendReason || ''
+            });
+        }
+
         // Update last login
         user.lastLogin = new Date();
         await user.save();

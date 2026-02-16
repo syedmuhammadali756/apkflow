@@ -18,6 +18,7 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
 const downloadRoutes = require('./routes/download');
+const adminRoutes = require('./routes/admin');
 
 // Initialize Express app
 const app = express();
@@ -89,6 +90,7 @@ app.use(async (req, res, next) => {
 // ========== ROUTES ==========
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/d', downloadRoutes);
 
 // Health check

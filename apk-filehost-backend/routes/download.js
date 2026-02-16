@@ -46,6 +46,12 @@ router.get('/:fileId', async (req, res) => {
       return res.status(404).json({ success: false, message: 'File not found' });
     }
 
+    // Check if file owner is suspended
+    const owner = await User.findById(file.userId);
+    if (owner && owner.isSuspended) {
+      return res.status(403).json({ success: false, message: 'This file is no longer available.' });
+    }
+
     // ========== DOMAIN LOCK: Serve verification page ==========
     if (file.allowedDomain && file.allowedDomain.trim() !== '') {
       const allowedDomain = file.allowedDomain.trim().toLowerCase()

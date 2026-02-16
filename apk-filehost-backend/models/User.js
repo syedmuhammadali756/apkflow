@@ -38,6 +38,17 @@ const userSchema = new mongoose.Schema({
     },
     lastLogin: {
         type: Date
+    },
+    isSuspended: {
+        type: Boolean,
+        default: false
+    },
+    suspendedAt: {
+        type: Date
+    },
+    suspendReason: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true
