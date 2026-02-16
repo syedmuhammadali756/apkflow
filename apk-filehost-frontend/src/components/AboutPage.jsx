@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BrandLogo, Shield, Zap, Heart, Users, ArrowRight, Globe, Mail, Star } from './Icons';
+import { BrandLogo, Shield, Zap, Heart, Users, ArrowRight, Globe, Mail, Star, Facebook, Linkedin, Instagram } from './Icons';
 import './AboutPage.css';
 import myPhoto from '../assets/My-Photo.png';
 
@@ -118,8 +118,10 @@ const AboutPage = () => {
                                 for the developer community.
                             </p>
                             <div className="founder-links">
-                                <a href="#" className="social-link"><Globe size={16} /></a>
-                                <a href="mailto:apkflow.vercel.app@gmail.com" className="social-link"><Mail size={16} /></a>
+                                <a href="https://www.facebook.com/SyedMuhammadAli.DrWebJr/" target="_blank" rel="noopener noreferrer" className="social-link"><Facebook size={16} /></a>
+                                <a href="https://pk.linkedin.com/in/syed-muhammad-abubaker-dr-web-jr" target="_blank" rel="noopener noreferrer" className="social-link"><Linkedin size={16} /></a>
+                                <a href="https://www.instagram.com/syedmuhammadabubaker.drwebjr/" target="_blank" rel="noopener noreferrer" className="social-link"><Instagram size={16} /></a>
+                                <a href="mailto:syedmuhammadalibukhari756@gmail.com" className="social-link"><Mail size={16} /></a>
                             </div>
                         </div>
                     </div>
