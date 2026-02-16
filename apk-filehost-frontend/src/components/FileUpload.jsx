@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield } from './Icons';
 import './FileUpload.css';
 
-const FileUpload = ({ onUploadSuccess }) => {
+const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -20,7 +20,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
     // Limits
     const MAX_UPLOADS = 3;
-    const uploadsRemaining = Math.max(0, MAX_UPLOADS - (props.fileCount || 0));
+    const uploadsRemaining = Math.max(0, MAX_UPLOADS - fileCount);
 
     const fileInputRef = useRef(null);
     const { API_URL } = useAuth();
