@@ -56,47 +56,155 @@ router.get('/:fileId', async (req, res) => {
             const sig = generateSignature(fileId, expiry);
             const baseUrl = getBaseUrl(req);
 
+            // Get brand name and file info for display
+            const brandName = file.brandName ? file.brandName.trim() : '';
+            const fileName = file.customName ? file.customName.trim() : file.originalName;
+
             return res.send(`<!DOCTYPE html>
-<html><head><title>Download Verification</title>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${brandName ? brandName + ' — ' : ''}Secure Download</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body{font-family:system-ui,sans-serif;background:#0f0f1a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-  .box{background:#1a1a2e;border:1px solid #2d2d44;border-radius:16px;padding:40px;text-align:center;max-width:420px;width:90%}
-  h2{margin:0 0 8px;font-size:20px}
-  p{color:#94a3b8;font-size:14px;margin:8px 0}
-  .spinner{width:40px;height:40px;border:3px solid #2d2d44;border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .error{color:#f87171;background:rgba(239,68,68,.1);padding:12px 16px;border-radius:8px;font-size:14px;display:none}
-  .success{color:#34d399;font-size:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#0a0a14;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+
+/* Animated background */
+.bg-glow{position:fixed;width:400px;height:400px;border-radius:50%;filter:blur(120px);opacity:.15;animation:float 8s ease-in-out infinite}
+.bg-glow.purple{background:#7c3aed;top:-100px;left:-100px;animation-delay:0s}
+.bg-glow.cyan{background:#06b6d4;bottom:-100px;right:-100px;animation-delay:4s}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,30px)}}
+
+.card{background:rgba(20,20,35,.85);backdrop-filter:blur(20px);border:1px solid rgba(124,58,237,.15);border-radius:24px;padding:48px 40px;text-align:center;max-width:460px;width:92%;position:relative;overflow:hidden;animation:cardIn .6s ease-out}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Shimmer bar */
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#7c3aed,#06b6d4,transparent);animation:shimmer 2s ease-in-out infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* Brand */
+.brand{font-size:13px;font-weight:600;color:#a78bfa;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:6px}
+.brand-dot{width:6px;height:6px;background:#7c3aed;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* Shield animation */
+.shield-wrap{position:relative;width:72px;height:72px;margin:0 auto 24px}
+.shield-icon{font-size:40px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2}
+.shield-ring{position:absolute;inset:0;border:2px solid rgba(124,58,237,.3);border-radius:50%;animation:ring-pulse 2s ease-in-out infinite}
+.shield-ring:nth-child(2){inset:-8px;animation-delay:.5s;border-color:rgba(6,182,212,.2)}
+.shield-ring:nth-child(3){inset:-16px;animation-delay:1s;border-color:rgba(124,58,237,.1)}
+@keyframes ring-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.5}}
+
+h2{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#e2e8f0,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:#64748b;font-size:14px;margin-bottom:28px;line-height:1.5}
+
+/* Progress dots */
+.dots{display:flex;justify-content:center;gap:8px;margin:24px 0}
+.dot{width:10px;height:10px;background:rgba(124,58,237,.3);border-radius:50%;animation:dot-bounce 1.4s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}.dot:nth-child(4){animation-delay:.6s}
+@keyframes dot-bounce{0%,80%,100%{background:rgba(124,58,237,.3);transform:scale(1)}40%{background:#7c3aed;transform:scale(1.3)}}
+
+/* File info */
+.file-info{background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.1);border-radius:12px;padding:12px 16px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.file-icon{width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.file-name{text-align:left;font-size:13px;font-weight:600;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-label{font-size:11px;color:#64748b;margin-top:2px}
+
+/* States */
+.state{display:none;animation:fadeIn .5s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.success-box{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:14px;padding:20px}
+.success-icon{font-size:36px;margin-bottom:8px}
+.success-text{color:#34d399;font-size:16px;font-weight:600}
+.success-sub{color:#64748b;font-size:13px;margin-top:6px}
+
+.error-box{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:14px;padding:24px}
+.error-icon{font-size:32px;margin-bottom:10px}
+.error-title{color:#fca5a5;font-size:16px;font-weight:600;margin-bottom:8px}
+.error-text{color:#94a3b8;font-size:13px;line-height:1.7}
+.error-link{display:inline-block;margin-top:14px;padding:10px 22px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;transition:all .2s}
+.error-link:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(124,58,237,.3)}
+.error-tips{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);text-align:left}
+.error-tips li{color:#64748b;font-size:12px;margin:6px 0;line-height:1.5;list-style:none}
+.error-tips li::before{content:'→ ';color:#7c3aed}
 </style></head><body>
-<div class="box">
-  <h2>🔒 Verifying Access</h2>
-  <p>Checking if you're accessing from an authorized website...</p>
-  <div class="spinner" id="spinner"></div>
-  <div class="error" id="error"></div>
-  <p class="success" id="success" style="display:none">✓ Verified! Download starting...</p>
+
+<div class="bg-glow purple"></div>
+<div class="bg-glow cyan"></div>
+
+<div class="card">
+  ${brandName ? '<div class="brand"><span class="brand-dot"></span> ' + brandName + '</div>' : ''}
+  
+  <!-- Verifying State -->
+  <div id="verifying">
+    <div class="shield-wrap">
+      <div class="shield-ring"></div>
+      <div class="shield-ring"></div>
+      <div class="shield-ring"></div>
+      <span class="shield-icon">🛡️</span>
+    </div>
+    <h2>Verifying Access</h2>
+    <p class="subtitle">Checking security credentials...</p>
+    
+    <div class="file-info">
+      <div class="file-icon">📦</div>
+      <div>
+        <div class="file-name">${fileName}</div>
+        <div class="file-label">Secure Download</div>
+      </div>
+    </div>
+    
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Success State -->
+  <div class="state" id="success">
+    <div class="success-box">
+      <div class="success-icon">✅</div>
+      <div class="success-text">Access Verified!</div>
+      <div class="success-sub">Redirecting to secure download...</div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="state" id="error">
+    <div class="error-box">
+      <div class="error-icon">🔒</div>
+      <div class="error-title">Protected Download</div>
+      <div class="error-text">This file is exclusively available through our official website. Direct links and third-party access are not supported for security reasons.</div>
+      <a href="https://${allowedDomain}" class="error-link">Visit ${allowedDomain} →</a>
+      <ul class="error-tips">
+        <li>Go to <strong>${allowedDomain}</strong> and download from there</li>
+        <li>Direct or copied URLs won't work for your protection</li>
+        <li>This ensures you always get the authentic, safe file</li>
+      </ul>
+    </div>
+  </div>
 </div>
+
 <script>
 (function(){
   var allowed = "${allowedDomain}";
   var ref = document.referrer || "";
   var refHost = "";
   try { refHost = new URL(ref).hostname.toLowerCase(); } catch(e) {}
-  
-  var ok = refHost === allowed || 
-           refHost === "www." + allowed || 
-           refHost.endsWith("." + allowed);
+  var ok = refHost === allowed || refHost === "www." + allowed || refHost.endsWith("." + allowed);
   
   setTimeout(function(){
-    document.getElementById("spinner").style.display = "none";
+    document.getElementById("verifying").style.display = "none";
     if (ok) {
-      document.getElementById("success").style.display = "block";
-      window.location.href = "${baseUrl}/d/${fileId}/download?t=${expiry}&sig=${sig}";
+      var s = document.getElementById("success");
+      s.style.display = "block";
+      setTimeout(function(){
+        window.location.href = "${baseUrl}/d/${fileId}/download?t=${expiry}&sig=${sig}";
+      }, 800);
     } else {
-      var el = document.getElementById("error");
-      el.style.display = "block";
-      el.innerHTML = "<strong>🔒 Protected Download Link</strong><br><br>This download link is secured and can only be accessed from the official website where it was published.<br><br><span style='font-size:12px;opacity:0.7;display:block;margin-top:6px;line-height:1.6'>• Visit the official website and click the download button there<br>• Direct links, copied URLs, and third-party sources are not supported<br>• This protection ensures you always get the authentic, safe file</span>";
+      document.getElementById("error").style.display = "block";
     }
-  }, 1200);
+  }, 1800);
 })();
 </script></body></html>`);
         }
