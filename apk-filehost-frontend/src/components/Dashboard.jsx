@@ -35,12 +35,16 @@ const Dashboard = ({ activePage = 'overview' }) => {
             const response = await axios.get(`${API_URL}/api/files`);
             if (response.data.success) {
                 setFiles(response.data.files);
-                // Use aggregated stats from backend
-                const backendStats = response.data.stats;
+                // Use aggregated stats from backend (with safe fallback)
+                const backendStats = response.data.stats || {};
+                const safeTotalFiles = backendStats.totalFiles ?? response.data.files.length;
+                const safeTotalDownloads = backendStats.totalDownloads ?? response.data.files.reduce((sum, file) => sum + (file.downloadCount || 0), 0);
+                const safeStorageUsed = backendStats.totalStorageUsed ?? (user?.storageUsed || 0);
+
                 setStats({
-                    totalFiles: backendStats.totalFiles,
-                    totalDownloads: backendStats.totalDownloads,
-                    storageUsed: backendStats.totalStorageUsed,
+                    totalFiles: safeTotalFiles,
+                    totalDownloads: safeTotalDownloads,
+                    storageUsed: safeStorageUsed,
                     storageLimit: user?.storageQuota || 5 * 1024 * 1024 * 1024,
                 });
             }
