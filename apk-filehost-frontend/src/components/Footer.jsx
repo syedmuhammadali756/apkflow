@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BrandLogo, Mail, Globe, Heart } from './Icons';
+import { BrandLogo, Mail, Globe, Heart, Facebook, Linkedin, Instagram } from './Icons';
 import './Footer.css';
 
 const Footer = () => {
@@ -23,6 +23,15 @@ const Footer = () => {
                             </a>
                             <a href="mailto:apkflow.vercel.app@gmail.com" className="social-link" aria-label="Email">
                                 <Mail size={18} />
+                            </a>
+                            <a href="https://www.facebook.com/SyedMuhammadAli.DrWebJr/" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Facebook">
+                                <Facebook size={18} />
+                            </a>
+                            <a href="https://pk.linkedin.com/in/syed-muhammad-abubaker-dr-web-jr" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="LinkedIn">
+                                <Linkedin size={18} />
+                            </a>
+                            <a href="https://www.instagram.com/syedmuhammadabubaker.drwebjr/" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Instagram">
+                                <Instagram size={18} />
                             </a>
                         </div>
                     </div>
