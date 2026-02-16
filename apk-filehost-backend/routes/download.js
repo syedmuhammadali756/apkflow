@@ -94,7 +94,7 @@ router.get('/:fileId', async (req, res) => {
     } else {
       var el = document.getElementById("error");
       el.style.display = "block";
-      el.innerHTML = "⚠️ <strong>Access Denied</strong><br>Please initiate the download from the official website.<br><span style='font-size:12px;opacity:0.8;font-weight:400;margin-top:4px;display:block'>Direct links and unauthorized sources are not supported.</span>";
+      el.innerHTML = "<strong>🔒 Protected Download Link</strong><br><br>This download link is secured and can only be accessed from the official website where it was published.<br><br><span style='font-size:12px;opacity:0.7;display:block;margin-top:6px;line-height:1.6'>• Visit the official website and click the download button there<br>• Direct links, copied URLs, and third-party sources are not supported<br>• This protection ensures you always get the authentic, safe file</span>";
     }
   }, 1200);
 })();
