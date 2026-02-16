@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { User, Mail, Lock, Check, AlertCircle, HardDrive, Package, Clock } from './Icons';
@@ -12,6 +12,33 @@ const ProfileSettings = () => {
     const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
     const [savingProfile, setSavingProfile] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
+    const [stats, setStats] = useState({
+        filesCount: 0,
+        storageUsed: 0
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // Fetch stats from files API to ensure they are live
+                const response = await axios.get(`${API_URL}/api/files?limit=1`);
+                if (response.data.success) {
+                    const backendStats = response.data.stats || {};
+                    setStats({
+                        filesCount: backendStats.totalFiles || 0,
+                        storageUsed: backendStats.totalStorageUsed || 0
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching profile stats:', error);
+            }
+        };
+
+        if (user) {
+            setProfile({ name: user.name || '', email: user.email || '' });
+            fetchStats();
+        }
+    }, [user, API_URL]);
 
     const handleProfileSave = async (e) => {
         e.preventDefault();
@@ -58,7 +85,7 @@ const ProfileSettings = () => {
     };
 
     const formatBytes = (bytes) => {
-        if (!bytes) return '0 B';
+        if (!bytes || bytes === 0) return '0 B';
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -92,14 +119,14 @@ const ProfileSettings = () => {
                     <Package size={20} />
                     <div>
                         <span className="ps-label">Files</span>
-                        <span className="ps-value">{user?.filesCount || 0}</span>
+                        <span className="ps-value">{stats.filesCount}</span>
                     </div>
                 </div>
                 <div className="profile-stat glass-card">
                     <HardDrive size={20} />
                     <div>
                         <span className="ps-label">Storage</span>
-                        <span className="ps-value">{formatBytes(user?.storageUsed)}</span>
+                        <span className="ps-value">{formatBytes(stats.storageUsed)}</span>
                     </div>
                 </div>
                 <div className="profile-stat glass-card">
