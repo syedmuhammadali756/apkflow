@@ -40,8 +40,20 @@ const upload = multer({
 // @route   POST /api/files/upload
 // @desc    Upload an APK file (supports direct metadata or multipart)
 // @access  Private
+// @route   POST /api/files/upload
+// @desc    Upload an APK file (supports direct metadata or multipart)
+// @access  Private
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
     try {
+        // Check upload limit (Max 3 files per user)
+        const currentFileCount = await File.countDocuments({ userId: req.userId, isActive: true });
+        if (currentFileCount >= 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Upload limit reached. Free accounts are limited to 3 files.'
+            });
+        }
+
         let originalName, fileSize, mimetype, storageKey, storageType;
 
         // Mode 1: Frontend uploaded directly to Supabase, sending metadata only
@@ -65,7 +77,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
 
-        // Check user storage quota
+        // Check user storage quota (legacy check, keep for safety)
         const user = await User.findById(req.userId);
         if (!user.hasStorageSpace(fileSize)) {
             return res.status(400).json({
@@ -128,12 +140,13 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 });
 
 // @route   GET /api/files
-// @desc    Get all files for logged-in user
+// @desc    Get all files for logged-in user + aggregated stats
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
         const { page = 1, limit = 20, sort = '-uploadedAt' } = req.query;
 
+        // Get paginated files
         const files = await File.find({ userId: req.userId, isActive: true })
             .sort(sort)
             .limit(limit * 1)
@@ -141,6 +154,11 @@ router.get('/', auth, async (req, res) => {
             .select('-__v');
 
         const total = await File.countDocuments({ userId: req.userId, isActive: true });
+
+        // Calculate aggregated stats from ALL user files (not just paginated ones)
+        const allUserFiles = await File.find({ userId: req.userId, isActive: true }).select('fileSize downloadCount');
+        const totalStorageUsed = allUserFiles.reduce((acc, file) => acc + (file.fileSize || 0), 0);
+        const totalDownloads = allUserFiles.reduce((acc, file) => acc + (file.downloadCount || 0), 0);
 
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         const filesWithFullLinks = files.map(file => {
@@ -162,6 +180,11 @@ router.get('/', auth, async (req, res) => {
         res.json({
             success: true,
             files: filesWithFullLinks,
+            stats: {
+                totalFiles: total,
+                totalStorageUsed,
+                totalDownloads
+            },
             pagination: {
                 total,
                 page: parseInt(page),

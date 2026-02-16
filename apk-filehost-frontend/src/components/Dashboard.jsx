@@ -35,11 +35,12 @@ const Dashboard = ({ activePage = 'overview' }) => {
             const response = await axios.get(`${API_URL}/api/files`);
             if (response.data.success) {
                 setFiles(response.data.files);
-                const totalDownloads = response.data.files.reduce((sum, file) => sum + file.downloadCount, 0);
+                // Use aggregated stats from backend
+                const backendStats = response.data.stats;
                 setStats({
-                    totalFiles: response.data.files.length,
-                    totalDownloads,
-                    storageUsed: user?.storageUsed || 0,
+                    totalFiles: backendStats.totalFiles,
+                    totalDownloads: backendStats.totalDownloads,
+                    storageUsed: backendStats.totalStorageUsed,
                     storageLimit: user?.storageQuota || 5 * 1024 * 1024 * 1024,
                 });
             }
@@ -63,7 +64,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
     };
 
     const formatBytes = (bytes) => {
-        if (bytes === 0) return '0 B';
+        if (!bytes || bytes === 0) return '0 B'; // Fix NaN/undefined
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -71,6 +72,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
     };
 
     const storagePercentage = Math.min((stats.storageUsed / stats.storageLimit) * 100, 100);
+    const uploadsRemaining = Math.max(0, 3 - stats.totalFiles);
 
     const handleLogout = () => { logout(); navigate('/'); };
 
@@ -81,7 +83,13 @@ const Dashboard = ({ activePage = 'overview' }) => {
     ];
 
     const statsCards = [
-        { icon: <Package size={22} />, label: 'Total Files', value: stats.totalFiles, color: '#7c3aed' },
+        {
+            icon: <Package size={22} />,
+            label: 'Total Files',
+            value: `${stats.totalFiles} / 3`,
+            color: '#7c3aed',
+            extra: <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>Free Plan Limit</span>
+        },
         { icon: <Download size={22} />, label: 'Downloads', value: stats.totalDownloads.toLocaleString(), color: '#06b6d4' },
         {
             icon: <HardDrive size={22} />, label: 'Storage Used', value: formatBytes(stats.storageUsed), color: '#f59e0b', extra: (
@@ -179,7 +187,15 @@ const Dashboard = ({ activePage = 'overview' }) => {
                             </div>
 
                             {/* Quick Upload */}
-                            <FileUpload onUploadSuccess={handleUploadSuccess} />
+                            {uploadsRemaining > 0 ? (
+                                <FileUpload onUploadSuccess={handleUploadSuccess} fileCount={stats.totalFiles} />
+                            ) : (
+                                <div className="upload-limit-reached glass-card">
+                                    <div className="limit-icon">⚠️</div>
+                                    <h3>Upload Limit Reached</h3>
+                                    <p>You have used all 3 free uploads. Please delete a file to upload a new one.</p>
+                                </div>
+                            )}
 
                             {/* File List */}
                             {loading ? (
@@ -194,7 +210,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
                     )}
 
                     {currentPage === 'upload' && (
-                        <FileUpload onUploadSuccess={handleUploadSuccess} />
+                        <FileUpload onUploadSuccess={handleUploadSuccess} fileCount={stats.totalFiles} />
                     )}
 
                     {currentPage === 'profile' && (

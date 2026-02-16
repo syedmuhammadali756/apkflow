@@ -15,6 +15,13 @@ const FileUpload = ({ onUploadSuccess }) => {
     const [customName, setCustomName] = useState('');
     const [brandName, setBrandName] = useState('');
     const [allowedDomain, setAllowedDomain] = useState('');
+    const [isDomainLocked, setIsDomainLocked] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
+
+    // Limits
+    const MAX_UPLOADS = 3;
+    const uploadsRemaining = Math.max(0, MAX_UPLOADS - (props.fileCount || 0));
+
     const fileInputRef = useRef(null);
     const { API_URL } = useAuth();
 
@@ -29,11 +36,14 @@ const FileUpload = ({ onUploadSuccess }) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
+        if (uploadsRemaining <= 0) { setError('Upload limit reached. Please delete a file first.'); return; }
         if (e.dataTransfer.files?.[0]) handleFileSelect(e.dataTransfer.files[0]);
     };
 
     const handleFileSelect = (selectedFile) => {
         setError('');
+        if (uploadsRemaining <= 0) { setError('Upload limit reached. Please delete a file first.'); return; }
+
         setUploadedLink('');
         setCopied(false);
         if (!selectedFile.name.endsWith('.apk')) { setError('Only APK files are allowed'); return; }
@@ -89,7 +99,7 @@ const FileUpload = ({ onUploadSuccess }) => {
                 storageType: 'supabase',
                 customName: customName.trim(),
                 brandName: brandName.trim(),
-                allowedDomain: allowedDomain.trim()
+                allowedDomain: isDomainLocked ? allowedDomain.trim() : ''
             });
 
             if (response.data.success) {
@@ -99,12 +109,13 @@ const FileUpload = ({ onUploadSuccess }) => {
                 setCustomName('');
                 setBrandName('');
                 setAllowedDomain('');
+                setIsDomainLocked(false);
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 onUploadSuccess();
             }
         } catch (err) {
             console.error(err);
-            setError(err.message || 'Upload failed');
+            setError(err.response?.data?.message || err.message || 'Upload failed');
         } finally {
             setUploading(false);
         }
@@ -117,7 +128,7 @@ const FileUpload = ({ onUploadSuccess }) => {
     };
 
     const formatBytes = (bytes) => {
-        if (bytes === 0) return '0 B';
+        if (!bytes || bytes === 0) return '0 B';
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -127,8 +138,13 @@ const FileUpload = ({ onUploadSuccess }) => {
     return (
         <div className="upload-section">
             <div className="upload-header">
-                <Upload size={22} />
-                <h2>Upload APK File</h2>
+                <div className="upload-title-row">
+                    <Upload size={22} />
+                    <h2>Upload APK File</h2>
+                </div>
+                <span className={`limit-badge ${uploadsRemaining === 0 ? 'limit-zero' : ''}`}>
+                    {uploadsRemaining} uploads remaining
+                </span>
             </div>
 
             {/* Success State */}
@@ -151,12 +167,12 @@ const FileUpload = ({ onUploadSuccess }) => {
 
             {/* Drop Zone */}
             <div
-                className={`drop-zone glass-card ${dragActive ? 'drag-active' : ''} ${file ? 'has-file' : ''}`}
+                className={`drop-zone glass-card ${dragActive ? 'drag-active' : ''} ${file ? 'has-file' : ''} ${uploadsRemaining <= 0 && !file ? 'disabled' : ''}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
-                onClick={() => !file && fileInputRef.current?.click()}
+                onClick={() => uploadsRemaining > 0 && !file && fileInputRef.current?.click()}
             >
                 <input
                     ref={fileInputRef}
@@ -164,6 +180,7 @@ const FileUpload = ({ onUploadSuccess }) => {
                     accept=".apk"
                     onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                     style={{ display: 'none' }}
+                    disabled={uploadsRemaining <= 0}
                 />
 
                 {!file ? (
@@ -171,8 +188,17 @@ const FileUpload = ({ onUploadSuccess }) => {
                         <div className="drop-icon">
                             <Cloud size={40} />
                         </div>
-                        <p className="drop-text">Drag & drop your APK file here</p>
-                        <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 100MB</p>
+                        {uploadsRemaining > 0 ? (
+                            <>
+                                <p className="drop-text">Drag & drop your APK file here</p>
+                                <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 100MB</p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="drop-text">Upload limit reached</p>
+                                <p className="drop-hint">Please delete an existing file to upload more.</p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <div className="file-preview">
@@ -231,20 +257,77 @@ const FileUpload = ({ onUploadSuccess }) => {
                                 onChange={(e) => setBrandName(e.target.value)}
                             />
                         </div>
-                        <div className="option-field domain-field">
-                            <label htmlFor="allowedDomain">
-                                <Shield size={14} />
-                                Restrict to Domain
-                            </label>
-                            <input
-                                id="allowedDomain"
-                                type="text"
-                                placeholder="e.g. example.com"
-                                value={allowedDomain}
-                                onChange={(e) => setAllowedDomain(e.target.value)}
-                            />
-                            <span className="domain-hint">Only this domain can use the download link</span>
+
+                        {/* Domain Lock Toggle */}
+                        <div className="domain-lock-section">
+                            <div className="toggle-row">
+                                <div className="toggle-label-group">
+                                    <div className="toggle-icon-wrap"><Shield size={16} /></div>
+                                    <div className="toggle-text">
+                                        <label className="toggle-title">Protect File</label>
+                                        <button className="help-link" onClick={() => setShowHelp(true)}>Why it's important?</button>
+                                    </div>
+                                </div>
+                                <label className="switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={isDomainLocked}
+                                        onChange={(e) => setIsDomainLocked(e.target.checked)}
+                                    />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+
+                            {isDomainLocked && (
+                                <div className="option-field domain-field slide-down">
+                                    <input
+                                        id="allowedDomain"
+                                        type="text"
+                                        placeholder="e.g. example.com"
+                                        value={allowedDomain}
+                                        onChange={(e) => setAllowedDomain(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <span className="domain-hint">Only this domain can use the download link</span>
+                                </div>
+                            )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Help Modal */}
+            {showHelp && (
+                <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+                    <div className="help-modal glass-card" onClick={e => e.stopPropagation()}>
+                        <div className="help-header">
+                            <h3>Why Protect Your File?</h3>
+                            <button onClick={() => setShowHelp(false)}><X size={18} /></button>
+                        </div>
+                        <div className="help-content">
+                            <div className="help-item">
+                                <span className="help-icon">🛡️</span>
+                                <div>
+                                    <strong>Prevent Theft</strong>
+                                    <p>Stops other websites from copying your direct download link.</p>
+                                </div>
+                            </div>
+                            <div className="help-item">
+                                <span className="help-icon">🔒</span>
+                                <div>
+                                    <strong>Traffic Security</strong>
+                                    <p>Ensures that users must visit YOUR website to download the file.</p>
+                                </div>
+                            </div>
+                            <div className="help-item">
+                                <span className="help-icon">💰</span>
+                                <div>
+                                    <strong>Save Bandwidth</strong>
+                                    <p>Prevents hotlinking which uses up your storage bandwidth.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button className="btn btn-primary btn-full" onClick={() => setShowHelp(false)}>Got it</button>
                     </div>
                 </div>
             )}
