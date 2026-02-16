@@ -11,9 +11,14 @@ const mkdir = promisify(fs.mkdir);
 // Uploads directory
 const UPLOADS_DIR = path.join(__dirname, '../uploads');
 
-// Ensure uploads directory exists
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Ensure uploads directory exists (skip on read-only serverless environments)
+try {
+    if (!fs.existsSync(UPLOADS_DIR)) {
+        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+} catch (e) {
+    // Read-only filesystem (e.g., Vercel serverless) - local storage won't work
+    console.warn('Cannot create uploads directory - local storage unavailable');
 }
 
 /**

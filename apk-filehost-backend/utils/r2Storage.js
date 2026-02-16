@@ -1,14 +1,22 @@
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
-// Configure R2 client (S3-compatible)
-const r2Client = new S3Client({
-    region: 'auto', // Cloudflare R2 uses 'auto'
-    endpoint: process.env.R2_ENDPOINT,
-    credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+// Lazy-init R2 client to avoid crash when R2 env vars are not set
+let r2Client = null;
+
+function getR2Client() {
+    if (!r2Client && process.env.R2_ACCESS_KEY_ID) {
+        r2Client = new S3Client({
+            region: 'auto',
+            endpoint: process.env.R2_ENDPOINT,
+            credentials: {
+                accessKeyId: process.env.R2_ACCESS_KEY_ID,
+                secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+            }
+        });
     }
-});
+    if (!r2Client) throw new Error('R2 storage is not configured');
+    return r2Client;
+}
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
 
@@ -30,7 +38,7 @@ async function uploadToR2(fileBuffer, key, contentType) {
             // ACL: 'public-read'
         });
 
-        const result = await r2Client.send(command);
+        const result = await getR2Client().send(command);
 
         return {
             success: true,
@@ -56,7 +64,7 @@ async function downloadFromR2(key) {
             Key: key
         });
 
-        const result = await r2Client.send(command);
+        const result = await getR2Client().send(command);
 
         return {
             stream: result.Body,
@@ -81,7 +89,7 @@ async function deleteFromR2(key) {
             Key: key
         });
 
-        await r2Client.send(command);
+        await getR2Client().send(command);
 
         return true;
     } catch (error) {
