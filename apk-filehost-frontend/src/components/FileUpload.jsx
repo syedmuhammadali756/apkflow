@@ -49,27 +49,35 @@ const FileUpload = ({ onUploadSuccess }) => {
         setProgress(0);
 
         try {
-            // 1. Direct Upload to Supabase (Bypass Backend)
+            // 1. Direct Upload to Supabase using Axios for Progress Tracking
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `uploads/${fileName}`;
 
-            // Lazy import to avoid load issues if not used
-            const { supabase } = await import('../utils/supabaseClient');
+            // Get Supabase config from env
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            const bucketName = 'apk-files';
 
-            const { data, error: uploadError } = await supabase.storage
-                .from('apk-files')
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
+            // Upload via Axios to get progress events
+            await axios.post(
+                `${supabaseUrl}/storage/v1/object/${bucketName}/${filePath}`,
+                file,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Content-Type': file.type || 'application/octet-stream',
+                        'x-upsert': 'false'
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        setProgress(percentCompleted);
+                    }
+                }
+            );
 
-            if (uploadError) throw uploadError;
-
-            // 2. Get Public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('apk-files')
-                .getPublicUrl(filePath);
+            // 2. Get Public URL (Manual construction)
+            const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`;
 
             // 3. Save Metadata to Backend
             const response = await axios.post(`${API_URL}/api/files/upload`, {
