@@ -47,8 +47,8 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
         setUploadedLink('');
         setCopied(false);
         if (!selectedFile.name.endsWith('.apk')) { setError('Only APK files are allowed'); return; }
-        const maxSize = 1024 * 1024 * 1024;
-        if (selectedFile.size > maxSize) { setError('File size must be less than 1GB'); return; }
+        const maxSize = 100 * 1024 * 1024;
+        if (selectedFile.size > maxSize) { setError('File size must be less than 100MB'); return; }
         setFile(selectedFile);
     };
 
@@ -191,7 +191,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
                         {uploadsRemaining > 0 ? (
                             <>
                                 <p className="drop-text">Drag & drop your APK file here</p>
-                                <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 1GB</p>
+                                <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 100MB</p>
                             </>
                         ) : (
                             <>

@@ -39,7 +39,7 @@ const LandingPage = () => {
     const [usersCount, usersRef] = useCountUp(2500);
 
     const features = [
-        { icon: <Upload size={28} />, title: 'Easy Upload', desc: 'Drag & drop your APK files. Upload up to 1GB per file with instant processing.' },
+        { icon: <Upload size={28} />, title: 'Easy Upload', desc: 'Drag & drop your APK files. Upload up to 100MB per file with instant processing.' },
         { icon: <Zap size={28} />, title: 'Instant Links', desc: 'Get shareable download links immediately after upload. No waiting, no hassle.' },
         { icon: <Shield size={28} />, title: 'Secure Storage', desc: 'Your files are protected with enterprise-grade security and encrypted transfers.' },
         { icon: <BarChart size={28} />, title: 'Analytics', desc: 'Track download counts, monitor traffic, and understand your audience.' },
