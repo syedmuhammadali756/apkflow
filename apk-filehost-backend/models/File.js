@@ -48,6 +48,23 @@ const fileSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    storageType: {
+        type: String,
+        default: 'local'
+    },
+    // --- NEW FEATURES ---
+    customName: {
+        type: String,
+        default: '' // User-chosen download filename
+    },
+    brandName: {
+        type: String,
+        default: '' // Brand/website name prefix
+    },
+    allowedDomain: {
+        type: String,
+        default: '' // Domain restriction for downloads (empty = no restriction)
+    },
     metadata: {
         fileExtension: String,
         uploadIP: String,

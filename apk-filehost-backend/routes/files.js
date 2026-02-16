@@ -76,6 +76,11 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 
         const fileId = nanoid(10);
 
+        // Get custom fields from request
+        const customName = req.body.customName || '';
+        const brandName = req.body.brandName || '';
+        const allowedDomain = req.body.allowedDomain || '';
+
         const newFile = new File({
             fileId,
             userId: req.userId,
@@ -85,6 +90,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
             storageKey,
             storageType,
             downloadLink: `/d/${fileId}`,
+            customName,
+            brandName,
+            allowedDomain,
             metadata: {
                 fileExtension: '.apk',
                 uploadIP: req.ip,

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Upload, Package, X, Check, Copy, Cloud } from './Icons';
+import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield } from './Icons';
 import './FileUpload.css';
 
 const FileUpload = ({ onUploadSuccess }) => {
@@ -12,6 +12,9 @@ const FileUpload = ({ onUploadSuccess }) => {
     const [uploadedLink, setUploadedLink] = useState('');
     const [dragActive, setDragActive] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [customName, setCustomName] = useState('');
+    const [brandName, setBrandName] = useState('');
+    const [allowedDomain, setAllowedDomain] = useState('');
     const fileInputRef = useRef(null);
     const { API_URL } = useAuth();
 
@@ -75,13 +78,19 @@ const FileUpload = ({ onUploadSuccess }) => {
                 mimetype: file.type,
                 storageKey: filePath,
                 fileUrl: publicUrl,
-                storageType: 'supabase'
+                storageType: 'supabase',
+                customName: customName.trim(),
+                brandName: brandName.trim(),
+                allowedDomain: allowedDomain.trim()
             });
 
             if (response.data.success) {
                 setUploadedLink(response.data.file.downloadLink);
                 setFile(null);
                 setProgress(100);
+                setCustomName('');
+                setBrandName('');
+                setAllowedDomain('');
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 onUploadSuccess();
             }
@@ -179,6 +188,58 @@ const FileUpload = ({ onUploadSuccess }) => {
                     </div>
                 )}
             </div>
+
+            {/* Custom Options (shown when file is selected) */}
+            {file && !uploading && (
+                <div className="upload-options glass-card">
+                    <div className="upload-options-header">
+                        <h3>Download Options</h3>
+                        <span className="options-hint">Optional — customize how your file is downloaded</span>
+                    </div>
+                    <div className="upload-options-fields">
+                        <div className="option-field">
+                            <label htmlFor="customName">
+                                <Package size={14} />
+                                Custom Filename
+                            </label>
+                            <input
+                                id="customName"
+                                type="text"
+                                placeholder="e.g. Instander"
+                                value={customName}
+                                onChange={(e) => setCustomName(e.target.value)}
+                            />
+                        </div>
+                        <div className="option-field">
+                            <label htmlFor="brandName">
+                                <Globe size={14} />
+                                Brand / Website Name
+                            </label>
+                            <input
+                                id="brandName"
+                                type="text"
+                                placeholder="e.g. MyWebsite"
+                                value={brandName}
+                                onChange={(e) => setBrandName(e.target.value)}
+                            />
+                        </div>
+                        <div className="option-field domain-field">
+                            <label htmlFor="allowedDomain">
+                                <Shield size={14} />
+                                Restrict to Domain
+                            </label>
+                            <input
+                                id="allowedDomain"
+                                type="text"
+                                placeholder="e.g. example.com"
+                                value={allowedDomain}
+                                onChange={(e) => setAllowedDomain(e.target.value)}
+                            />
+                            <span className="domain-hint">Only this domain can use the download link</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Error */}
             {error && (

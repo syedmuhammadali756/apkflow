@@ -12,7 +12,7 @@ const STORAGE_TYPE = process.env.SUPABASE_URL ? 'supabase' : (process.env.R2_ACC
 const downloadFile = STORAGE_TYPE === 'supabase' ? null : (STORAGE_TYPE === 'r2' ? downloadFromR2 : downloadFromLocal);
 
 // @route   GET /d/:fileId
-// @desc    Download file (public endpoint)
+// @desc    Download file (public endpoint) with domain lock + custom filename
 // @access  Public
 router.get('/:fileId', async (req, res) => {
     try {
@@ -27,29 +27,109 @@ router.get('/:fileId', async (req, res) => {
                 message: 'File not found'
             });
         }
-        // If using Supabase, redirect to public URL
+
+        // ========== DOMAIN LOCK SECURITY ==========
+        if (file.allowedDomain && file.allowedDomain.trim() !== '') {
+            const referer = req.get('Referer') || req.get('Origin') || '';
+            const allowedDomain = file.allowedDomain.trim().toLowerCase()
+                .replace(/^https?:\/\//, '') // Remove protocol
+                .replace(/\/.*$/, '');        // Remove path
+
+            let requestDomain = '';
+            try {
+                if (referer) {
+                    const url = new URL(referer);
+                    requestDomain = url.hostname.toLowerCase();
+                }
+            } catch (e) {
+                requestDomain = '';
+            }
+
+            // Check if the request is coming from the allowed domain
+            const isAllowed = requestDomain === allowedDomain ||
+                requestDomain === `www.${allowedDomain}` ||
+                requestDomain.endsWith(`.${allowedDomain}`);
+
+            if (!isAllowed) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'This download link is restricted to a specific website.',
+                    detail: 'Access denied: domain not authorized'
+                });
+            }
+        }
+
+        // ========== BUILD CUSTOM DOWNLOAD FILENAME ==========
+        let downloadName = file.originalName;
+
+        if (file.customName && file.customName.trim()) {
+            let name = file.customName.trim();
+            // Ensure .apk extension
+            if (!name.toLowerCase().endsWith('.apk')) {
+                name += '.apk';
+            }
+            // Prepend brand name if set
+            if (file.brandName && file.brandName.trim()) {
+                const brand = file.brandName.trim().replace(/[^a-zA-Z0-9_\-. ]/g, '');
+                downloadName = `${brand}_${name}`;
+            } else {
+                downloadName = name;
+            }
+        } else if (file.brandName && file.brandName.trim()) {
+            // Only brand name, no custom name
+            const brand = file.brandName.trim().replace(/[^a-zA-Z0-9_\-. ]/g, '');
+            downloadName = `${brand}_${file.originalName}`;
+        }
+
+        // ========== PROXY DOWNLOAD (for custom filename + domain security) ==========
         if (file.storageType === 'supabase' || STORAGE_TYPE === 'supabase') {
             const publicUrl = getSupabasePublicUrl(file.storageKey);
             if (publicUrl) {
-                // Increment download count (async, don't wait)
-                file.incrementDownload().catch(err => console.error('Error incrementing download count:', err));
-                return res.redirect(publicUrl);
+                try {
+                    // Fetch file from Supabase and proxy it to user
+                    const fetch = (await import('node-fetch')).default;
+                    const supaResponse = await fetch(publicUrl);
+
+                    if (!supaResponse.ok) {
+                        throw new Error(`Supabase returned ${supaResponse.status}`);
+                    }
+
+                    // Set headers for download with custom filename
+                    res.setHeader('Content-Type', file.mimeType || 'application/vnd.android.package-archive');
+                    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
+                    if (supaResponse.headers.get('content-length')) {
+                        res.setHeader('Content-Length', supaResponse.headers.get('content-length'));
+                    }
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+
+                    // Pipe the response
+                    supaResponse.body.pipe(res);
+
+                    // Increment download count (async)
+                    file.incrementDownload().catch(err => console.error('Error incrementing download count:', err));
+                    return;
+                } catch (proxyError) {
+                    console.error('Proxy download error:', proxyError);
+                    // Fallback: redirect to Supabase URL (loses custom filename but at least works)
+                    file.incrementDownload().catch(err => console.error('Error incrementing download count:', err));
+                    return res.redirect(publicUrl);
+                }
             }
         }
 
         // Get file stream from storage (Local or R2)
         const { stream, contentType, contentLength } = await downloadFile(file.storageKey);
 
-        // Set response headers for file download
+        // Set response headers for file download with custom filename
         res.setHeader('Content-Type', contentType || file.mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
         res.setHeader('Content-Length', contentLength || file.fileSize);
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        res.setHeader('Cache-Control', 'public, max-age=86400');
 
         // Stream file to response
         stream.pipe(res);
 
-        // Increment download count (async, don't wait)
+        // Increment download count (async)
         file.incrementDownload().catch(err => {
             console.error('Error incrementing download count:', err);
         });
