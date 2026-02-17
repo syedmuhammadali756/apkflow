@@ -6,9 +6,20 @@ let tebiClient = null;
 
 function getTebiClient() {
     if (!tebiClient && process.env.TEBI_ACCESS_KEY) {
+        const endpoint = process.env.TEBI_ENDPOINT || 'https://s3.tebi.io';
+        // Extract region from endpoint (e.g., s3.us-east-005.backblazeb2.com -> us-east-005)
+        let region = 'us-east-1';
+        try {
+            const hostname = new URL(endpoint).hostname;
+            const parts = hostname.split('.');
+            if (parts.length >= 3 && parts[0] === 's3') {
+                region = parts[1]; // e.g., 'us-east-005'
+            }
+        } catch (e) { /* fallback to us-east-1 */ }
+
         tebiClient = new S3Client({
-            region: 'global',
-            endpoint: process.env.TEBI_ENDPOINT || 'https://s3.tebi.io',
+            region,
+            endpoint,
             credentials: {
                 accessKeyId: process.env.TEBI_ACCESS_KEY,
                 secretAccessKey: process.env.TEBI_SECRET_KEY
@@ -16,7 +27,7 @@ function getTebiClient() {
             forcePathStyle: true
         });
     }
-    if (!tebiClient) throw new Error('Tebi storage is not configured. Check TEBI_ACCESS_KEY env var.');
+    if (!tebiClient) throw new Error('Storage is not configured. Check TEBI_ACCESS_KEY env var.');
     return tebiClient;
 }
 
