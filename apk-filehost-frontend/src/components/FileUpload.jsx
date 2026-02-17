@@ -69,15 +69,30 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
 
             const { uploadUrl, storageKey, publicUrl } = presignRes.data;
 
-            // 2. Upload directly to Tebi.io using presigned URL (with progress)
-            await axios.put(uploadUrl, file, {
-                headers: {
-                    'Content-Type': file.type || 'application/octet-stream',
-                },
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setProgress(percentCompleted);
-                }
+            // 2. Upload directly to Tebi.io using presigned URL (with progress via XHR)
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', uploadUrl, true);
+                xhr.timeout = 300000; // 5 minute timeout
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        setProgress(Math.round((e.loaded * 100) / e.total));
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve();
+                    } else {
+                        reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error('Network error during upload'));
+                xhr.ontimeout = () => reject(new Error('Upload timed out after 5 minutes'));
+
+                xhr.send(file);
             });
 
             // 3. Save Metadata to Backend

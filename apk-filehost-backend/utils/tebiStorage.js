@@ -47,10 +47,11 @@ async function uploadToTebi(fileBuffer, key, contentType) {
  * Generate presigned PUT URL for direct frontend upload
  */
 async function getPresignedUploadUrl(key, contentType) {
+    // Don't sign ContentType — browser sets its own Content-Type header
+    // which can mismatch the signed value and cause 403/stalled uploads
     const command = new PutObjectCommand({
         Bucket: BUCKET,
-        Key: key,
-        ContentType: contentType
+        Key: key
     });
 
     const uploadUrl = await getSignedUrl(getTebiClient(), command, { expiresIn: 3600 });
