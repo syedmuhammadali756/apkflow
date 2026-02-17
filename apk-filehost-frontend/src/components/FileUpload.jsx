@@ -59,65 +59,169 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
         setProgress(0);
 
         try {
-            // 1. Get presigned upload URL from backend
-            const presignRes = await axios.post(`${API_URL}/api/files/presign`, {
-                fileName: file.name,
-                contentType: file.type || 'application/octet-stream'
-            }, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
+            // Check if file is large enough for multipart (e.g., > 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                // === MULTIPART UPLOAD STRATEGY ===
+                const chunkSize = 10 * 1024 * 1024; // 10MB chunks
+                const totalParts = Math.ceil(file.size / chunkSize);
 
-            const { uploadUrl, storageKey, publicUrl } = presignRes.data;
+                // 1. Init Multipart Upload
+                const initRes = await axios.post(`${API_URL}/api/files/multipart/init`, {
+                    fileName: file.name,
+                    contentType: file.type || 'application/octet-stream'
+                }, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
 
-            // 2. Upload directly to Tebi.io using presigned URL (with progress via XHR)
-            await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', uploadUrl, true);
-                xhr.timeout = 300000; // 5 minute timeout
+                const { uploadId, key } = initRes.data;
+                const uploadedParts = [];
+                let uploadedBytes = 0;
 
-                xhr.upload.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        setProgress(Math.round((e.loaded * 100) / e.total));
-                    }
-                };
+                // 2. Upload Parts
+                for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+                    const start = (partNumber - 1) * chunkSize;
+                    const end = Math.min(start + chunkSize, file.size);
+                    const chunk = file.slice(start, end);
 
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve();
-                    } else {
-                        reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
-                    }
-                };
+                    // Get presigned URL for this part
+                    const signRes = await axios.post(`${API_URL}/api/files/multipart/sign-part`, {
+                        key,
+                        uploadId,
+                        partNumber
+                    }, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
 
-                xhr.onerror = () => reject(new Error('Network error during upload'));
-                xhr.ontimeout = () => reject(new Error('Upload timed out after 5 minutes'));
+                    // Upload part via XHR
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', signRes.data.uploadUrl, true);
+                        xhr.timeout = 120000; // 2 min timeout per chunk
 
-                xhr.send(file);
-            });
+                        // Track progress relative to total file size
+                        xhr.upload.onprogress = (e) => {
+                            if (e.lengthComputable) {
+                                const partProgress = e.loaded;
+                                const totalProgress = uploadedBytes + partProgress;
+                                const percentCompleted = Math.round((totalProgress * 100) / file.size);
+                                setProgress(percentCompleted);
+                            }
+                        };
 
-            // 3. Save Metadata to Backend
-            const response = await axios.post(`${API_URL}/api/files/upload`, {
-                originalName: file.name,
-                fileSize: file.size,
-                mimetype: file.type,
-                storageKey: storageKey,
-                fileUrl: publicUrl,
-                storageType: 'tebi',
-                customName: customName.trim(),
-                brandName: brandName.trim(),
-                allowedDomain: isDomainLocked ? allowedDomain.trim() : ''
-            });
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                // ETag is needed for completion
+                                const etag = xhr.getResponseHeader('ETag');
+                                uploadedParts.push({ PartNumber: partNumber, ETag: etag.replaceAll('"', '') });
+                                uploadedBytes += chunk.size;
+                                resolve();
+                            } else {
+                                reject(new Error(`Part ${partNumber} failed: ${xhr.status}`));
+                            }
+                        };
 
-            if (response.data.success) {
-                setUploadedLink(response.data.file.downloadLink);
-                setFile(null);
-                setProgress(100);
-                setCustomName('');
-                setBrandName('');
-                setAllowedDomain('');
-                setIsDomainLocked(false);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-                onUploadSuccess();
+                        xhr.onerror = () => reject(new Error(`Network error on part ${partNumber}`));
+                        xhr.ontimeout = () => reject(new Error(`Timeout on part ${partNumber}`));
+                        xhr.send(chunk);
+                    });
+                }
+
+                // 3. Complete Multipart Upload
+                const completeRes = await axios.post(`${API_URL}/api/files/multipart/complete`, {
+                    key,
+                    uploadId,
+                    parts: uploadedParts
+                }, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                // 4. Save Metadata
+                const response = await axios.post(`${API_URL}/api/files/upload`, {
+                    originalName: file.name,
+                    fileSize: file.size,
+                    mimetype: file.type,
+                    storageKey: key,
+                    fileUrl: completeRes.data.location,
+                    storageType: 'tebi',
+                    customName: customName.trim(),
+                    brandName: brandName.trim(),
+                    allowedDomain: isDomainLocked ? allowedDomain.trim() : ''
+                });
+
+                if (response.data.success) {
+                    setUploadedLink(response.data.file.downloadLink);
+                    setFile(null);
+                    setProgress(100);
+                    setCustomName('');
+                    setBrandName('');
+                    setAllowedDomain('');
+                    setIsDomainLocked(false);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                    onUploadSuccess();
+                }
+
+            } else {
+                // === EXISTING STANDARD UPLOAD (Small Files) ===
+                // 1. Get presigned upload URL from backend
+                const presignRes = await axios.post(`${API_URL}/api/files/presign`, {
+                    fileName: file.name,
+                    contentType: file.type || 'application/octet-stream'
+                }, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                const { uploadUrl, storageKey, publicUrl } = presignRes.data;
+
+                // 2. Upload directly to Tebi.io using presigned URL (with progress via XHR)
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', uploadUrl, true);
+                    xhr.timeout = 300000; // 5 minute timeout
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            setProgress(Math.round((e.loaded * 100) / e.total));
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve();
+                        } else {
+                            reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error('Network error during upload'));
+                    xhr.ontimeout = () => reject(new Error('Upload timed out after 5 minutes'));
+
+                    xhr.send(file);
+                });
+
+                // 3. Save Metadata to Backend
+                const response = await axios.post(`${API_URL}/api/files/upload`, {
+                    originalName: file.name,
+                    fileSize: file.size,
+                    mimetype: file.type,
+                    storageKey: storageKey,
+                    fileUrl: publicUrl,
+                    storageType: 'tebi',
+                    customName: customName.trim(),
+                    brandName: brandName.trim(),
+                    allowedDomain: isDomainLocked ? allowedDomain.trim() : ''
+                });
+
+                if (response.data.success) {
+                    setUploadedLink(response.data.file.downloadLink);
+                    setFile(null);
+                    setProgress(100);
+                    setCustomName('');
+                    setBrandName('');
+                    setAllowedDomain('');
+                    setIsDomainLocked(false);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                    onUploadSuccess();
+                }
             }
         } catch (err) {
             console.error(err);

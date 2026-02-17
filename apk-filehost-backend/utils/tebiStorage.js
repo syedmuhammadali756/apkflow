@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 // Lazy-init Tebi S3 client
@@ -107,6 +107,75 @@ async function deleteFromTebi(key) {
 }
 
 /**
+ * Initiate Multipart Upload
+ */
+async function createMultipartUpload(key, contentType) {
+    const command = new CreateMultipartUploadCommand({
+        Bucket: BUCKET,
+        Key: key,
+        ContentType: contentType
+    });
+
+    const result = await getTebiClient().send(command);
+    return {
+        uploadId: result.UploadId,
+        key: key
+    };
+}
+
+/**
+ * Get Presigned URL for a Multipart Part
+ */
+async function getMultipartPresignedUrl(key, uploadId, partNumber) {
+    const command = new UploadPartCommand({
+        Bucket: BUCKET,
+        Key: key,
+        UploadId: uploadId,
+        PartNumber: partNumber
+    });
+
+    const uploadUrl = await getSignedUrl(getTebiClient(), command, { expiresIn: 3600 });
+    return { uploadUrl, partNumber };
+}
+
+/**
+ * Complete Multipart Upload
+ */
+async function completeMultipartUpload(key, uploadId, parts) {
+    // parts must be an array of { ETag, PartNumber }
+    // Sort parts by PartNumber (required by S3)
+    parts.sort((a, b) => a.PartNumber - b.PartNumber);
+
+    const command = new CompleteMultipartUploadCommand({
+        Bucket: BUCKET,
+        Key: key,
+        UploadId: uploadId,
+        MultipartUpload: { Parts: parts }
+    });
+
+    const result = await getTebiClient().send(command);
+    return {
+        success: true,
+        location: getTebiPublicUrl(key),
+        key: key
+    };
+}
+
+/**
+ * Abort Multipart Upload (Cleanup)
+ */
+async function abortMultipartUpload(key, uploadId) {
+    const command = new AbortMultipartUploadCommand({
+        Bucket: BUCKET,
+        Key: key,
+        UploadId: uploadId
+    });
+
+    await getTebiClient().send(command);
+    return true;
+}
+
+/**
  * Get public URL for a file
  */
 function getTebiPublicUrl(key) {
@@ -120,5 +189,9 @@ module.exports = {
     deleteFromTebi,
     getTebiPublicUrl,
     getPresignedUploadUrl,
-    getPresignedDownloadUrl
+    getPresignedDownloadUrl,
+    createMultipartUpload,
+    getMultipartPresignedUrl,
+    completeMultipartUpload,
+    abortMultipartUpload
 };

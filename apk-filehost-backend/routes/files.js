@@ -5,7 +5,7 @@ const { nanoid } = require('nanoid');
 const auth = require('../middleware/auth');
 const { uploadToLocal, deleteFromLocal } = require('../utils/localStorage');
 const { uploadToR2, deleteFromR2 } = require('../utils/r2Storage');
-const { uploadToTebi, deleteFromTebi, getPresignedUploadUrl } = require('../utils/tebiStorage');
+const { uploadToTebi, deleteFromTebi, getPresignedUploadUrl, createMultipartUpload, getMultipartPresignedUrl, completeMultipartUpload, abortMultipartUpload } = require('../utils/tebiStorage');
 const File = require('../models/File');
 const User = require('../models/User');
 
@@ -344,6 +344,69 @@ router.post('/presign', auth, async (req, res) => {
     } catch (error) {
         console.error('Presign error:', error.message, 'STORAGE_TYPE:', STORAGE_TYPE, 'TEBI_KEY_SET:', !!process.env.TEBI_ACCESS_KEY);
         res.status(500).json({ success: false, message: 'Failed to generate upload URL', debug: error.message });
+    }
+});
+
+// @route   POST /api/files/multipart/init
+// @desc    Initialize multipart upload
+router.post('/multipart/init', auth, async (req, res) => {
+    try {
+        const { fileName, contentType } = req.body;
+        if (!fileName) return res.status(400).json({ success: false, message: 'fileName is required' });
+
+        const fileExt = fileName.split('.').pop();
+        const storageKey = `uploads/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const mime = contentType || 'application/octet-stream';
+
+        const { uploadId, key } = await createMultipartUpload(storageKey, mime);
+
+        res.json({ success: true, uploadId, key });
+    } catch (error) {
+        console.error('Multipart init error:', error);
+        res.status(500).json({ success: false, message: 'Failed to init upload' });
+    }
+});
+
+// @route   POST /api/files/multipart/sign-part
+// @desc    Get presigned URL for a part
+router.post('/multipart/sign-part', auth, async (req, res) => {
+    try {
+        const { key, uploadId, partNumber } = req.body;
+        if (!key || !uploadId || !partNumber) return res.status(400).json({ success: false, message: 'Missing parameters' });
+
+        const { uploadUrl } = await getMultipartPresignedUrl(key, uploadId, parseInt(partNumber));
+        res.json({ success: true, uploadUrl });
+    } catch (error) {
+        console.error('Multipart sign error:', error);
+        res.status(500).json({ success: false, message: 'Failed to sign part' });
+    }
+});
+
+// @route   POST /api/files/multipart/complete
+// @desc    Complete multipart upload
+router.post('/multipart/complete', auth, async (req, res) => {
+    try {
+        const { key, uploadId, parts } = req.body;
+        if (!key || !uploadId || !parts) return res.status(400).json({ success: false, message: 'Missing parameters' });
+
+        const result = await completeMultipartUpload(key, uploadId, parts);
+        res.json(result);
+    } catch (error) {
+        console.error('Multipart complete error:', error);
+        res.status(500).json({ success: false, message: 'Failed to complete upload' });
+    }
+});
+
+// @route   POST /api/files/multipart/abort
+// @desc    Abort multipart upload
+router.post('/multipart/abort', auth, async (req, res) => {
+    try {
+        const { key, uploadId } = req.body;
+        await abortMultipartUpload(key, uploadId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Multipart abort error:', error);
+        res.status(500).json({ success: false, message: 'Failed to abort upload' });
     }
 });
 
