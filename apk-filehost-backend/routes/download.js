@@ -272,7 +272,9 @@ async function serveFile(req, res, file) {
     if (!name.toLowerCase().endsWith('.apk')) name += '.apk';
     if (file.brandName && file.brandName.trim()) {
       const brand = file.brandName.trim().replace(/[^a-zA-Z0-9_\-. ]/g, '');
-      downloadName = `${brand}_${name}`;
+      // Format: AppName_BrandName.apk
+      const nameWithoutExt = name.replace(/\.apk$/i, '');
+      downloadName = `${nameWithoutExt}_${brand}.apk`;
     } else {
       downloadName = name;
     }
