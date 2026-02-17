@@ -19,7 +19,7 @@ const deleteFile = STORAGE_TYPE === 'tebi' ? deleteFromTebi : (STORAGE_TYPE === 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: (process.env.MAX_FILE_SIZE_MB || 100) * 1024 * 1024 // Default 100MB
+        fileSize: (process.env.MAX_FILE_SIZE_MB || 1024) * 1024 * 1024 // Default 1GB
     },
     fileFilter: (req, file, cb) => {
         // Only allow APK files
@@ -342,8 +342,8 @@ router.post('/presign', auth, async (req, res) => {
             publicUrl: presignData.publicUrl
         });
     } catch (error) {
-        console.error('Presign error:', error);
-        res.status(500).json({ success: false, message: 'Failed to generate upload URL' });
+        console.error('Presign error:', error.message, 'STORAGE_TYPE:', STORAGE_TYPE, 'TEBI_KEY_SET:', !!process.env.TEBI_ACCESS_KEY);
+        res.status(500).json({ success: false, message: 'Failed to generate upload URL', debug: error.message });
     }
 });
 

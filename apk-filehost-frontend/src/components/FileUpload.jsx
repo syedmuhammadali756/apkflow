@@ -47,8 +47,8 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
         setUploadedLink('');
         setCopied(false);
         if (!selectedFile.name.endsWith('.apk')) { setError('Only APK files are allowed'); return; }
-        const maxSize = 100 * 1024 * 1024;
-        if (selectedFile.size > maxSize) { setError('File size must be less than 100MB'); return; }
+        const maxSize = 1024 * 1024 * 1024; // 1GB with Tebi.io
+        if (selectedFile.size > maxSize) { setError('File size must be less than 1GB'); return; }
         setFile(selectedFile);
     };
 
