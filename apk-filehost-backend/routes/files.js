@@ -303,7 +303,7 @@ router.use((error, req, res, next) => {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                message: `File too large. Maximum size is ${process.env.MAX_FILE_SIZE_MB || 100}MB`
+                message: `File too large. Maximum size is ${process.env.MAX_FILE_SIZE_MB || 1024}MB`
             });
         }
     }

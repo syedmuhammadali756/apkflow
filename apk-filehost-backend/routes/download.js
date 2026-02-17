@@ -287,7 +287,7 @@ async function serveFile(req, res, file) {
   // Tebi: Use presigned download URL
   if (file.storageType === 'tebi' || STORAGE_TYPE === 'tebi') {
     try {
-      const downloadUrl = await getPresignedDownloadUrl(file.storageKey);
+      const downloadUrl = await getPresignedDownloadUrl(file.storageKey, downloadName);
       return res.redirect(downloadUrl);
     } catch (err) {
       console.error('Tebi presigned URL error:', err);

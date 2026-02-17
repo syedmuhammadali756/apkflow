@@ -77,11 +77,18 @@ async function getPresignedUploadUrl(key, contentType) {
 /**
  * Generate presigned GET URL for downloads
  */
-async function getPresignedDownloadUrl(key) {
-    const command = new GetObjectCommand({
+async function getPresignedDownloadUrl(key, downloadName) {
+    const commandInput = {
         Bucket: BUCKET,
         Key: key
-    });
+    };
+
+    // Set custom download filename if provided
+    if (downloadName) {
+        commandInput.ResponseContentDisposition = `attachment; filename="${encodeURIComponent(downloadName)}"`;
+    }
+
+    const command = new GetObjectCommand(commandInput);
 
     return await getSignedUrl(getTebiClient(), command, { expiresIn: 3600 });
 }

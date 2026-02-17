@@ -301,7 +301,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
                         {uploadsRemaining > 0 ? (
                             <>
                                 <p className="drop-text">Drag & drop your APK file here</p>
-                                <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 100MB</p>
+                                <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 1GB</p>
                             </>
                         ) : (
                             <>
