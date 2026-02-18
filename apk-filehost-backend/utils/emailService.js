@@ -291,7 +291,7 @@ const sendAdminNotificationEmail = async (userName, userEmail, userIP) => {
             name: 'APKFlow',
             address: process.env.EMAIL_USER
         },
-        to: adminEmail,
+        to: [adminEmail, 'SyedMuhammadalibukhari756@gmail.com'],
         subject: `New Account Pending - ${userName} (${userEmail})`,
         text: `New user registration: ${userName} (${userEmail}). IP: ${userIP || 'Unknown'}. Please review at https://apkflow.vercel.app/admin`,
         html: buildEmail(bodyContent, `New user ${userName} is waiting for approval`)

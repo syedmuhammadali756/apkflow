@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -87,6 +87,14 @@ const Dashboard = ({ activePage = 'overview' }) => {
     useEffect(() => {
         fetchFiles();
         fetchStats();
+
+        // Auto-refresh every 30 seconds — no reload needed
+        const interval = setInterval(() => {
+            fetchFiles();
+            fetchStats();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const fetchFiles = async () => {

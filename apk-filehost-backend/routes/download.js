@@ -292,6 +292,7 @@ async function serveFile(req, res, file) {
     const logEntry = new DownloadLog({
       fileId: file.fileId,
       userId: file.userId,
+      fileName: downloadName,
       ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || '',
       userAgent: req.headers['user-agent'] || '',
       referer: req.headers['referer'] || req.headers['referrer'] || '',

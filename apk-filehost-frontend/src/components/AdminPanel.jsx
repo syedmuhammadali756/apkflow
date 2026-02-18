@@ -74,6 +74,14 @@ const AdminPanel = () => {
             setIsAuthenticated(true);
             fetchUsers();
             fetchPendingUsers();
+
+            // Auto-refresh every 30 seconds — no reload needed
+            const interval = setInterval(() => {
+                fetchUsers();
+                fetchPendingUsers();
+            }, 30000);
+
+            return () => clearInterval(interval);
         }
     }, []);
 

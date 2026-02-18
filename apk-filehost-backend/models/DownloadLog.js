@@ -12,6 +12,10 @@ const downloadLogSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    fileName: {
+        type: String,
+        default: ''
+    },
     ip: {
         type: String,
         default: ''
