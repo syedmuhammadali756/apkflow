@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const router = express.Router();
 const File = require('../models/File');
 const User = require('../models/User');
+const DownloadLog = require('../models/DownloadLog');
 const { downloadFromR2 } = require('../utils/r2Storage');
 const { downloadFromLocal } = require('../utils/localStorage');
 const { getTebiPublicUrl, getPresignedDownloadUrl } = require('../utils/tebiStorage');
@@ -285,6 +286,19 @@ async function serveFile(req, res, file) {
 
   // Increment download count
   file.incrementDownload().catch(err => console.error('Download count error:', err));
+
+  // Log download for analytics (non-blocking)
+  try {
+    const logEntry = new DownloadLog({
+      fileId: file.fileId,
+      userId: file.userId,
+      ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || '',
+      userAgent: req.headers['user-agent'] || '',
+      referer: req.headers['referer'] || req.headers['referrer'] || '',
+      country: req.headers['x-vercel-ip-country'] || 'Unknown'
+    });
+    logEntry.save().catch(() => { });
+  } catch (e) { /* silent */ }
 
   // Tebi: Use presigned download URL
   if (file.storageType === 'tebi' || STORAGE_TYPE === 'tebi') {

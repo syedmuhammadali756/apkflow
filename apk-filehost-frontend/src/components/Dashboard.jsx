@@ -8,6 +8,60 @@ import ProfileSettings from './ProfileSettings';
 import { BrandLogo, Grid, Upload, User, Settings, LogOut, BarChart, Package, HardDrive, Download, TrendingUp, Menu, X, Bell, Search } from './Icons';
 import './Dashboard.css';
 
+// Simple bar chart component
+const MiniChart = ({ data = [] }) => {
+    const max = Math.max(...data.map(d => d.downloads), 1);
+    return (
+        <div className="mini-chart">
+            <div className="chart-bars">
+                {data.map((d, i) => (
+                    <div key={i} className="chart-bar-wrap" title={`${d.label}: ${d.downloads} downloads`}>
+                        <div
+                            className="chart-bar"
+                            style={{
+                                height: `${Math.max((d.downloads / max) * 100, 4)}%`,
+                                background: d.downloads > 0 ? 'linear-gradient(to top, #7c3aed, #a78bfa)' : 'rgba(124, 58, 237, 0.15)'
+                            }}
+                        />
+                        <span className="chart-label">{d.label}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// Storage ring component
+const StorageRing = ({ used, total, formatBytes }) => {
+    const percent = Math.min((used / total) * 100, 100);
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = circumference - (percent / 100) * circumference;
+    const color = percent > 90 ? '#ef4444' : percent > 70 ? '#f59e0b' : '#7c3aed';
+
+    return (
+        <div className="storage-ring-container">
+            <svg viewBox="0 0 100 100" className="storage-ring-svg">
+                <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(124,58,237,0.1)" strokeWidth="8" />
+                <circle
+                    cx="50" cy="50" r={radius} fill="none"
+                    stroke={color}
+                    strokeWidth="8"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                    style={{ transition: 'stroke-dashoffset 1s ease' }}
+                />
+            </svg>
+            <div className="storage-ring-text">
+                <span className="storage-ring-percent">{Math.round(percent)}%</span>
+                <span className="storage-ring-label">used</span>
+            </div>
+        </div>
+    );
+};
+
 const Dashboard = ({ activePage = 'overview' }) => {
     const { user, logout, API_URL } = useAuth();
     const navigate = useNavigate();
@@ -20,6 +74,9 @@ const Dashboard = ({ activePage = 'overview' }) => {
         totalDownloads: 0,
         storageUsed: 0,
         storageLimit: 5 * 1024 * 1024 * 1024,
+        downloadsToday: 0,
+        chartData: [],
+        topFiles: []
     });
 
     useEffect(() => {
@@ -28,6 +85,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
 
     useEffect(() => {
         fetchFiles();
+        fetchStats();
     }, []);
 
     const fetchFiles = async () => {
@@ -35,18 +93,6 @@ const Dashboard = ({ activePage = 'overview' }) => {
             const response = await axios.get(`${API_URL}/api/files`);
             if (response.data.success) {
                 setFiles(response.data.files);
-                // Use aggregated stats from backend (with safe fallback)
-                const backendStats = response.data.stats || {};
-                const safeTotalFiles = backendStats.totalFiles ?? response.data.files.length;
-                const safeTotalDownloads = backendStats.totalDownloads ?? response.data.files.reduce((sum, file) => sum + (file.downloadCount || 0), 0);
-                const safeStorageUsed = backendStats.totalStorageUsed ?? (user?.storageUsed || 0);
-
-                setStats({
-                    totalFiles: safeTotalFiles,
-                    totalDownloads: safeTotalDownloads,
-                    storageUsed: safeStorageUsed,
-                    storageLimit: user?.storageQuota || 5 * 1024 * 1024 * 1024,
-                });
             }
         } catch (error) {
             console.error('Error fetching files:', error);
@@ -55,20 +101,41 @@ const Dashboard = ({ activePage = 'overview' }) => {
         }
     };
 
-    const handleUploadSuccess = () => fetchFiles();
+    const fetchStats = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/api/stats/overview`);
+            if (response.data.success) {
+                const s = response.data.stats;
+                setStats({
+                    totalFiles: s.totalFiles || 0,
+                    totalDownloads: s.totalDownloads || 0,
+                    storageUsed: s.storageUsed || 0,
+                    storageLimit: s.storageQuota || 5 * 1024 * 1024 * 1024,
+                    downloadsToday: s.downloadsToday || 0,
+                    chartData: s.chartData || [],
+                    topFiles: s.topFiles || []
+                });
+            }
+        } catch (error) {
+            console.error('Stats error:', error);
+            // Fallback to file-level data
+        }
+    };
+
+    const handleUploadSuccess = () => { fetchFiles(); fetchStats(); };
 
     const handleDelete = async (fileId) => {
         if (!window.confirm('Are you sure you want to delete this file?')) return;
         try {
             const response = await axios.delete(`${API_URL}/api/files/${fileId}`);
-            if (response.data.success) fetchFiles();
+            if (response.data.success) { fetchFiles(); fetchStats(); }
         } catch (error) {
             alert('Error deleting file: ' + (error.response?.data?.message || error.message));
         }
     };
 
     const formatBytes = (bytes) => {
-        if (!bytes || bytes === 0) return '0 B'; // Fix NaN/undefined
+        if (!bytes || bytes === 0) return '0 B';
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -84,25 +151,6 @@ const Dashboard = ({ activePage = 'overview' }) => {
         { id: 'overview', label: 'Dashboard', icon: <Grid size={20} />, action: () => { setCurrentPage('overview'); navigate('/dashboard'); } },
         { id: 'upload', label: 'Upload', icon: <Upload size={20} />, action: () => setCurrentPage('upload') },
         { id: 'profile', label: 'Settings', icon: <Settings size={20} />, action: () => { setCurrentPage('profile'); navigate('/profile'); } },
-    ];
-
-    const statsCards = [
-        {
-            icon: <Package size={22} />,
-            label: 'Total Files',
-            value: `${stats.totalFiles} / 3`,
-            color: '#7c3aed',
-            extra: <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>Free Plan Limit</span>
-        },
-        { icon: <Download size={22} />, label: 'Downloads', value: stats.totalDownloads.toLocaleString(), color: '#06b6d4' },
-        {
-            icon: <HardDrive size={22} />, label: 'Storage Used', value: formatBytes(stats.storageUsed), color: '#f59e0b', extra: (
-                <div className="mini-progress">
-                    <div className="mini-progress-bar" style={{ width: `${storagePercentage}%` }} />
-                </div>
-            )
-        },
-        { icon: <TrendingUp size={22} />, label: 'Avg. Downloads', value: stats.totalFiles > 0 ? Math.round(stats.totalDownloads / stats.totalFiles) : 0, color: '#10b981' },
     ];
 
     return (
@@ -176,18 +224,91 @@ const Dashboard = ({ activePage = 'overview' }) => {
                         <>
                             {/* Stats Grid */}
                             <div className="dash-stats-grid">
-                                {statsCards.map((card, i) => (
-                                    <div key={i} className="dash-stat-card glass-card">
-                                        <div className="dash-stat-icon" style={{ background: `${card.color}15`, color: card.color }}>
-                                            {card.icon}
-                                        </div>
-                                        <div className="dash-stat-info">
-                                            <span className="dash-stat-label">{card.label}</span>
-                                            <span className="dash-stat-value">{card.value}</span>
-                                            {card.extra}
+                                <div className="dash-stat-card glass-card">
+                                    <div className="dash-stat-icon" style={{ background: '#7c3aed15', color: '#7c3aed' }}>
+                                        <Package size={22} />
+                                    </div>
+                                    <div className="dash-stat-info">
+                                        <span className="dash-stat-label">Total Files</span>
+                                        <span className="dash-stat-value">{stats.totalFiles} / 3</span>
+                                        <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>Free Plan Limit</span>
+                                    </div>
+                                </div>
+
+                                <div className="dash-stat-card glass-card">
+                                    <div className="dash-stat-icon" style={{ background: '#06b6d415', color: '#06b6d4' }}>
+                                        <Download size={22} />
+                                    </div>
+                                    <div className="dash-stat-info">
+                                        <span className="dash-stat-label">Total Downloads</span>
+                                        <span className="dash-stat-value">{stats.totalDownloads.toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="dash-stat-card glass-card">
+                                    <div className="dash-stat-icon" style={{ background: '#10b98115', color: '#10b981' }}>
+                                        <TrendingUp size={22} />
+                                    </div>
+                                    <div className="dash-stat-info">
+                                        <span className="dash-stat-label">Today</span>
+                                        <span className="dash-stat-value">{stats.downloadsToday}</span>
+                                        <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>downloads today</span>
+                                    </div>
+                                </div>
+
+                                <div className="dash-stat-card glass-card">
+                                    <div className="dash-stat-icon" style={{ background: '#f59e0b15', color: '#f59e0b' }}>
+                                        <HardDrive size={22} />
+                                    </div>
+                                    <div className="dash-stat-info">
+                                        <span className="dash-stat-label">Storage</span>
+                                        <span className="dash-stat-value">{formatBytes(stats.storageUsed)}</span>
+                                        <div className="mini-progress">
+                                            <div className="mini-progress-bar" style={{ width: `${storagePercentage}%` }} />
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+                            </div>
+
+                            {/* Charts Row */}
+                            <div className="dash-charts-row">
+                                {/* Downloads Chart */}
+                                <div className="glass-card dash-chart-card">
+                                    <div className="dash-chart-header">
+                                        <h3><BarChart size={18} /> Downloads — Last 7 Days</h3>
+                                        <span className="dash-chart-total">
+                                            {stats.chartData.reduce((s, d) => s + d.downloads, 0)} total
+                                        </span>
+                                    </div>
+                                    <MiniChart data={stats.chartData} />
+                                </div>
+
+                                {/* Storage Ring + Top Files */}
+                                <div className="glass-card dash-chart-card">
+                                    <div className="dash-chart-header">
+                                        <h3><HardDrive size={18} /> Storage & Top Files</h3>
+                                    </div>
+                                    <div className="dash-storage-top">
+                                        <StorageRing
+                                            used={stats.storageUsed}
+                                            total={stats.storageLimit}
+                                            formatBytes={formatBytes}
+                                        />
+                                        <div className="top-files-list">
+                                            {stats.topFiles.length > 0 ? stats.topFiles.map((f, i) => (
+                                                <div key={i} className="top-file-item">
+                                                    <span className="top-file-rank">#{i + 1}</span>
+                                                    <div className="top-file-info">
+                                                        <span className="top-file-name">{f.name}</span>
+                                                        <span className="top-file-meta">{f.downloads} downloads • {formatBytes(f.size)}</span>
+                                                    </div>
+                                                </div>
+                                            )) : (
+                                                <p className="top-files-empty">No files yet. Upload your first APK!</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Quick Upload */}
