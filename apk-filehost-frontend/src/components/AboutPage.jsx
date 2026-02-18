@@ -13,12 +13,18 @@ const AboutPage = () => {
     ];
 
     const techStack = [
-        { name: 'React', desc: 'Frontend UI Framework' },
+        { name: 'React', desc: 'Frontend Framework' },
         { name: 'Node.js', desc: 'Backend Runtime' },
-        { name: 'Express', desc: 'API Framework' },
-        { name: 'MongoDB', desc: 'Database' },
-        { name: 'Vite', desc: 'Build Tool' },
-        { name: 'JWT', desc: 'Authentication' },
+        { name: 'SQLite', desc: 'Database (Lightweight & Fast)' },
+        { name: 'Tebi.io', desc: 'S3-Compatible Object Storage' },
+        { name: 'Vite', desc: 'Modern Build Tool' },
+        { name: 'Express', desc: 'High-performance API' },
+    ];
+
+    const roadmap = [
+        { title: 'AI Smart Analytics', status: 'In Progress', desc: 'Predictive download trends and regional insights.' },
+        { title: 'Team Workspaces', status: 'Planned', desc: 'Collaborate with your development team on projects.' },
+        { title: 'Direct API Access', status: 'Coming Soon', desc: 'Upload and manage files via your own scripts.' },
     ];
 
     return (
@@ -129,17 +135,36 @@ const AboutPage = () => {
             </section>
 
             {/* Tech Stack */}
-            <section className="section">
+            <section className="section tech-section">
                 <div className="container">
                     <div className="section-header">
-                        <h2>Built With Modern <span className="gradient-text">Technology</span></h2>
-                        <p>We use cutting-edge tools to deliver the best experience.</p>
+                        <h2>Powered By <span className="gradient-text">Modern Tech</span></h2>
+                        <p>We leverage industry-leading tools to provide a professional-grade hosting experience.</p>
                     </div>
                     <div className="tech-grid">
                         {techStack.map((tech, i) => (
                             <div key={i} className="tech-card glass-card">
-                                <h4>{tech.name}</h4>
+                                <div className="tech-badge">{tech.name}</div>
                                 <p>{tech.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Roadmap */}
+            <section className="section roadmap-section">
+                <div className="container">
+                    <div className="section-header">
+                        <h2>The Future of <span className="gradient-text">APKFlow</span></h2>
+                        <p>We're constantly evolving to meet the needs of modern developers.</p>
+                    </div>
+                    <div className="roadmap-grid">
+                        {roadmap.map((item, i) => (
+                            <div key={item.title} className="roadmap-card glass-card">
+                                <span className={`roadmap-status ${item.status.toLowerCase().replace(' ', '-')}`}>{item.status}</span>
+                                <h3>{item.title}</h3>
+                                <p>{item.desc}</p>
                             </div>
                         ))}
                     </div>

@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Folder, Package, Download, Copy, Trash, Check, Clock, Search, Edit, X, Globe, Shield, BarChart, Eye } from './Icons';
+import { Package, Download, Clock, Copy, Check, Trash, Edit, X, Globe, Shield, BarChart, Eye, Search, Grid as GridIcon, List as ListIcon, Folder } from './Icons';
 import './FileList.css';
 
 const FileList = ({ files, onDelete, onRename }) => {
@@ -18,6 +18,7 @@ const FileList = ({ files, onDelete, onRename }) => {
     const [statsLoading, setStatsLoading] = useState(false);
     const [showQR, setShowQR] = useState(null);
     const [toast, setToast] = useState(null);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -109,9 +110,9 @@ const FileList = ({ files, onDelete, onRename }) => {
 
     // Search and Sort
     const filteredFiles = useMemo(() => {
+        if (!files) return [];
         let result = [...files];
 
-        // Search
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
             result = result.filter(f =>
@@ -122,7 +123,6 @@ const FileList = ({ files, onDelete, onRename }) => {
             );
         }
 
-        // Sort
         switch (sortBy) {
             case 'newest': result.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)); break;
             case 'oldest': result.sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)); break;
@@ -131,7 +131,6 @@ const FileList = ({ files, onDelete, onRename }) => {
             case 'downloads': result.sort((a, b) => (b.downloadCount || 0) - (a.downloadCount || 0)); break;
             default: break;
         }
-
         return result;
     }, [files, searchQuery, sortBy]);
 
@@ -178,195 +177,185 @@ const FileList = ({ files, onDelete, onRename }) => {
                         <option value="downloads">Most Downloads</option>
                     </select>
                 </div>
-                <span className="filelist-count">{filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''}</span>
+                <div className="filelist-controls">
+                    <div className="view-toggle">
+                        <button
+                            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                            onClick={() => setViewMode('list')}
+                            title="List View"
+                        >
+                            <ListIcon size={16} />
+                        </button>
+                        <button
+                            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                            onClick={() => setViewMode('grid')}
+                            title="Grid View"
+                        >
+                            <GridIcon size={16} />
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* File Cards */}
-            <div className="filelist-grid">
-                {filteredFiles.map((file) => (
-                    <div key={file.fileId} className="file-card glass-card">
-                        {renamingFile === file.fileId ? (
-                            /* Edit Mode */
-                            <div className="file-edit-mode">
-                                <div className="file-edit-group">
-                                    <label>App Name</label>
-                                    <input
-                                        type="text"
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                        onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
-                                        placeholder="Custom filename"
-                                        autoFocus
-                                    />
-                                </div>
-                                <div className="file-edit-group">
-                                    <label>Brand Name</label>
-                                    <input
-                                        type="text"
-                                        value={newBrand}
-                                        onChange={(e) => setNewBrand(e.target.value)}
-                                        onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
-                                        placeholder="Brand prefix (optional)"
-                                    />
-                                </div>
-                                <div className="file-edit-group">
-                                    <label>Domain Lock</label>
-                                    <input
-                                        type="text"
-                                        value={newDomain}
-                                        onChange={(e) => setNewDomain(e.target.value)}
-                                        onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
-                                        placeholder="example.com (optional)"
-                                    />
-                                </div>
-                                <div className="file-edit-actions">
-                                    <button className="btn btn-sm btn-primary" onClick={() => handleRename(file.fileId)}>
-                                        <Check size={14} /> Save
-                                    </button>
-                                    <button className="btn btn-sm btn-ghost" onClick={cancelRename}>
-                                        <X size={14} /> Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            /* Normal Mode */
-                            <>
-                                <div className="file-card-top">
-                                    <div className="file-icon-wrap">
-                                        <Package size={20} />
+            {/* File Container */}
+            <div className={`file-view-mode-${viewMode}`}>
+                <div className="filelist-grid">
+                    {filteredFiles.map((file) => (
+                        <div key={file.fileId} className={`file-card glass-card ${viewMode}`}>
+                            {renamingFile === file.fileId ? (
+                                <div className="file-edit-mode">
+                                    <div className="file-edit-group">
+                                        <label>App Name</label>
+                                        <input
+                                            type="text"
+                                            value={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
+                                            onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
+                                            placeholder="Custom filename"
+                                            autoFocus
+                                        />
                                     </div>
-                                    <div className="file-info">
-                                        <span className="file-name" title={file.customName || file.originalName}>
-                                            {file.customName || file.originalName}
-                                        </span>
-                                        <div className="file-meta">
-                                            <span>{formatBytes(file.fileSize)}</span>
-                                            <span>•</span>
-                                            <span>{formatDate(file.uploadedAt)}</span>
+                                    <div className="file-edit-group">
+                                        <label>Brand Name</label>
+                                        <input
+                                            type="text"
+                                            value={newBrand}
+                                            onChange={(e) => setNewBrand(e.target.value)}
+                                            onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
+                                            placeholder="Brand prefix (optional)"
+                                        />
+                                    </div>
+                                    <div className="file-edit-group">
+                                        <label>Domain Lock</label>
+                                        <input
+                                            type="text"
+                                            value={newDomain}
+                                            onChange={(e) => setNewDomain(e.target.value)}
+                                            onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
+                                            placeholder="example.com (optional)"
+                                        />
+                                    </div>
+                                    <div className="file-edit-actions">
+                                        <button className="btn btn-sm btn-primary" onClick={() => handleRename(file.fileId)}>
+                                            <Check size={14} /> Save
+                                        </button>
+                                        <button className="btn btn-sm btn-ghost" onClick={cancelRename}>
+                                            <X size={14} /> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="file-card-top">
+                                        <div className="file-icon-wrap">
+                                            <Package size={20} />
+                                        </div>
+                                        <div className="file-info">
+                                            <span className="file-name" title={file.customName || file.originalName}>
+                                                {file.customName || file.originalName}
+                                            </span>
+                                            <div className="file-meta">
+                                                <span>{formatBytes(file.fileSize)}</span>
+                                                <span className="dot">•</span>
+                                                <span>{formatDate(file.uploadedAt)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="file-badges">
+                                            {file.brandName && <span className="file-badge brand" title={`Brand: ${file.brandName}`}><Globe size={10} /> {file.brandName}</span>}
+                                            {file.allowedDomain && <span className="file-badge locked" title={`Locked to: ${file.allowedDomain}`}><Shield size={10} /> Locked</span>}
                                         </div>
                                     </div>
-                                    <div className="file-badges">
-                                        {file.brandName && <span className="file-badge brand"><Globe size={10} /> {file.brandName}</span>}
-                                        {file.allowedDomain && <span className="file-badge locked"><Shield size={10} /> Locked</span>}
-                                    </div>
-                                </div>
 
-                                <div className="file-stats-row">
-                                    <div className="file-stat">
-                                        <Download size={14} />
-                                        <span>{file.downloadCount || 0} downloads</span>
+                                    <div className="file-stats-row">
+                                        <div className="file-stat">
+                                            <Download size={14} />
+                                            <span>{file.downloadCount || 0} hits</span>
+                                        </div>
+                                        <div className="file-stat">
+                                            <Clock size={14} />
+                                            <span>{file.lastDownloadAt ? formatDate(file.lastDownloadAt) : 'Never'}</span>
+                                        </div>
                                     </div>
-                                    <div className="file-stat">
-                                        <Clock size={14} />
-                                        <span>{file.lastDownloadAt ? formatDate(file.lastDownloadAt) : 'Never'}</span>
-                                    </div>
-                                </div>
 
-                                {/* QR Code */}
-                                {showQR === file.fileId && (
-                                    <div className="file-qr-section">
-                                        <img src={getQRUrl(file.downloadLink)} alt="QR Code" className="file-qr-img" />
-                                        <p className="file-qr-tip">Scan to download</p>
-                                    </div>
-                                )}
+                                    {showQR === file.fileId && (
+                                        <div className="file-qr-section">
+                                            <div className="qr-container">
+                                                <img src={getQRUrl(file.downloadLink)} alt="QR Code" className="file-qr-img" />
+                                            </div>
+                                            <p className="file-qr-tip">Scan to direct download</p>
+                                        </div>
+                                    )}
 
-                                <div className="file-actions">
-                                    <button
-                                        className="file-action-btn"
-                                        onClick={() => copyLink(file.downloadLink, file.fileId)}
-                                        title="Copy download link"
-                                    >
-                                        {copiedId === file.fileId ? <Check size={14} /> : <Copy size={14} />}
-                                        <span>{copiedId === file.fileId ? 'Copied!' : 'Copy Link'}</span>
-                                    </button>
-                                    <button
-                                        className="file-action-btn"
-                                        onClick={() => setShowQR(showQR === file.fileId ? null : file.fileId)}
-                                        title="Show QR Code"
-                                    >
-                                        <Eye size={14} />
-                                        <span>QR</span>
-                                    </button>
-                                    <button
-                                        className="file-action-btn"
-                                        onClick={() => openFileDetails(file)}
-                                        title="View Details"
-                                    >
-                                        <BarChart size={14} />
-                                        <span>Stats</span>
-                                    </button>
-                                    <button className="file-action-btn" onClick={() => startRename(file)} title="Edit file">
-                                        <Edit size={14} />
-                                        <span>Edit</span>
-                                    </button>
-                                    <button className="file-action-btn danger" onClick={() => onDelete(file.fileId)} title="Delete file">
-                                        <Trash size={14} />
-                                        <span>Delete</span>
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                ))}
+                                    <div className="file-actions">
+                                        <button className="file-action-btn copy" onClick={() => copyLink(file.downloadLink, file.fileId)} title="Copy link">
+                                            {copiedId === file.fileId ? <Check size={14} /> : <Copy size={14} />}
+                                            <span>{copiedId === file.fileId ? 'Copied' : 'Link'}</span>
+                                        </button>
+                                        <button className={`file-action-btn qr ${showQR === file.fileId ? 'active' : ''}`} onClick={() => setShowQR(showQR === file.fileId ? null : file.fileId)} title="Show QR">
+                                            <Eye size={14} />
+                                            <span>QR</span>
+                                        </button>
+                                        <button className="file-action-btn stats" onClick={() => openFileDetails(file)} title="Analytics">
+                                            <BarChart size={14} />
+                                            <span>Stats</span>
+                                        </button>
+                                        <button className="file-action-btn edit" onClick={() => startRename(file)} title="Edit">
+                                            <Edit size={14} />
+                                            <span>Edit</span>
+                                        </button>
+                                        <button className="file-action-btn delete" onClick={() => onDelete(file.fileId)} title="Delete">
+                                            <Trash size={14} />
+                                            <span>Del</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            {/* File Detail Modal */}
+            {/* Detail Modal */}
             {selectedFile && (
                 <div className="file-modal-overlay" onClick={closeDetails}>
                     <div className="file-modal glass-card" onClick={(e) => e.stopPropagation()}>
                         <div className="file-modal-header">
                             <div className="file-modal-title">
-                                <Package size={22} />
+                                <div className="modal-icon"><Package size={24} /></div>
                                 <div>
                                     <h2>{selectedFile.customName || selectedFile.originalName}</h2>
-                                    <span className="file-modal-id">ID: {selectedFile.fileId}</span>
+                                    <span className="file-modal-id">FID: {selectedFile.fileId}</span>
                                 </div>
                             </div>
-                            <button className="file-modal-close" onClick={closeDetails}>
-                                <X size={20} />
-                            </button>
+                            <button className="file-modal-close" onClick={closeDetails}><X size={20} /></button>
                         </div>
 
                         {statsLoading ? (
                             <div className="file-modal-loading">
                                 <div className="spinner" />
-                                <span>Loading analytics...</span>
+                                <span>Generating analytics...</span>
                             </div>
                         ) : (
                             <div className="file-modal-body">
-                                {/* File Info Grid */}
                                 <div className="file-detail-grid">
                                     <div className="file-detail-item">
-                                        <span className="detail-label">File Size</span>
+                                        <span className="detail-label">Size</span>
                                         <span className="detail-value">{formatBytes(selectedFile.fileSize)}</span>
                                     </div>
                                     <div className="file-detail-item">
-                                        <span className="detail-label">Downloads</span>
+                                        <span className="detail-label">Total Downloads</span>
                                         <span className="detail-value">{selectedFile.downloadCount || 0}</span>
                                     </div>
                                     <div className="file-detail-item">
-                                        <span className="detail-label">Uploaded</span>
+                                        <span className="detail-label">Upload Date</span>
                                         <span className="detail-value">{formatDate(selectedFile.uploadedAt)}</span>
                                     </div>
                                     <div className="file-detail-item">
-                                        <span className="detail-label">Last Download</span>
-                                        <span className="detail-value">{selectedFile.lastDownloadAt ? formatDate(selectedFile.lastDownloadAt) : 'Never'}</span>
+                                        <span className="detail-label">Last Interaction</span>
+                                        <span className="detail-value">{selectedFile.lastDownloadAt ? formatDate(selectedFile.lastDownloadAt) : 'None'}</span>
                                     </div>
-                                    {selectedFile.brandName && (
-                                        <div className="file-detail-item">
-                                            <span className="detail-label">Brand</span>
-                                            <span className="detail-value">{selectedFile.brandName}</span>
-                                        </div>
-                                    )}
-                                    {selectedFile.allowedDomain && (
-                                        <div className="file-detail-item">
-                                            <span className="detail-label">Domain Lock</span>
-                                            <span className="detail-value">{selectedFile.allowedDomain}</span>
-                                        </div>
-                                    )}
                                 </div>
 
-                                {/* Download Link + QR */}
                                 <div className="file-modal-link-section">
                                     <div className="file-modal-link">
                                         <input type="text" value={selectedFile.downloadLink} readOnly />
@@ -375,17 +364,16 @@ const FileList = ({ files, onDelete, onRename }) => {
                                         </button>
                                     </div>
                                     <div className="file-modal-qr">
-                                        <img src={getQRUrl(selectedFile.downloadLink)} alt="QR Code" />
-                                        <span>Scan to download</span>
+                                        <img src={getQRUrl(selectedFile.downloadLink)} alt="QR" />
+                                        <span>Scan for mobile install</span>
                                     </div>
                                 </div>
 
-                                {/* Analytics */}
                                 {fileStats?.analytics && (
-                                    <>
+                                    <div className="modal-analytics-wrapper">
                                         {fileStats.analytics.countryStats?.length > 0 && (
                                             <div className="file-analytics-section">
-                                                <h4>📍 Top Countries</h4>
+                                                <h4>📍 Geo-Distribution</h4>
                                                 <div className="analytics-list">
                                                     {fileStats.analytics.countryStats.map((c, i) => (
                                                         <div key={i} className="analytics-row">
@@ -400,35 +388,21 @@ const FileList = ({ files, onDelete, onRename }) => {
                                             </div>
                                         )}
 
-                                        {fileStats.analytics.refererStats?.length > 0 && (
-                                            <div className="file-analytics-section">
-                                                <h4>🔗 Top Referrers</h4>
-                                                <div className="analytics-list">
-                                                    {fileStats.analytics.refererStats.map((r, i) => (
-                                                        <div key={i} className="analytics-row">
-                                                            <span className="analytics-name">{new URL(r.referer).hostname || r.referer}</span>
-                                                            <span className="analytics-count">{r.count}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
                                         {fileStats.analytics.recentDownloads?.length > 0 && (
                                             <div className="file-analytics-section">
-                                                <h4>📥 Recent Downloads</h4>
+                                                <h4>📥 Recent Activity</h4>
                                                 <div className="analytics-list recent">
-                                                    {fileStats.analytics.recentDownloads.slice(0, 10).map((d, i) => (
+                                                    {fileStats.analytics.recentDownloads.slice(0, 5).map((d, i) => (
                                                         <div key={i} className="analytics-row">
-                                                            <span className="analytics-name">{d.country || 'Unknown'}</span>
-                                                            <span className="analytics-meta">{d.ip ? d.ip.substring(0, 12) + '...' : '—'}</span>
-                                                            <span className="analytics-time">{new Date(d.timestamp).toLocaleString()}</span>
+                                                            <span className="analytics-name">{d.country || 'Global'}</span>
+                                                            <span className="analytics-meta">{d.ip ? `IP: ${d.ip.substring(0, 8)}...` : '—'}</span>
+                                                            <span className="analytics-time">{new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         )}
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         )}

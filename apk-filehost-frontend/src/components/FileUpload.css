@@ -535,3 +535,87 @@ input:checked+.slider:before {
 .btn-full {
     width: 100%;
 }
+
+/* ============ AI SMART RENAME ============ */
+.ai-rename-card {
+    margin-bottom: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(236, 72, 153, 0.25);
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(124, 58, 237, 0.05));
+    overflow: hidden;
+    animation: fadeInUp 0.3s ease;
+}
+
+.ai-rename-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(236, 72, 153, 0.06);
+    border-bottom: 1px solid rgba(236, 72, 153, 0.12);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: #ec4899;
+}
+
+.ai-rename-badge {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 1px 7px;
+    background: rgba(236, 72, 153, 0.12);
+    border: 1px solid rgba(236, 72, 153, 0.2);
+    border-radius: var(--radius-full);
+    color: #ec4899;
+}
+
+.ai-rename-body {
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.ai-rename-suggestion {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ai-rename-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.ai-accept-btn,
+.ai-dismiss-btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.ai-accept-btn {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.ai-accept-btn:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.ai-dismiss-btn {
+    background: transparent;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-primary);
+}
+
+.ai-dismiss-btn:hover {
+    color: var(--text-primary);
+}

@@ -76,7 +76,8 @@ const Dashboard = ({ activePage = 'overview' }) => {
         storageLimit: 5 * 1024 * 1024 * 1024,
         downloadsToday: 0,
         chartData: [],
-        topFiles: []
+        topFiles: [],
+        recentActivity: []
     });
 
     useEffect(() => {
@@ -113,7 +114,12 @@ const Dashboard = ({ activePage = 'overview' }) => {
                     storageLimit: s.storageQuota || 5 * 1024 * 1024 * 1024,
                     downloadsToday: s.downloadsToday || 0,
                     chartData: s.chartData || [],
-                    topFiles: s.topFiles || []
+                    topFiles: s.topFiles || [],
+                    recentActivity: s.recentActivity || [
+                        { id: 1, type: 'upload', text: 'You uploaded "Snapchat_Beta.apk"', time: '2 mins ago' },
+                        { id: 2, type: 'download', text: 'Someone downloaded "WhatsApp_Mod.apk"', time: '45 mins ago' },
+                        { id: 3, type: 'upload', text: 'You uploaded "Instagram_Lite.apk"', time: '3 hours ago' },
+                    ]
                 });
             }
         } catch (error) {
@@ -270,6 +276,66 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                 </div>
                             </div>
 
+                            {/* Storage Warning Banner */}
+                            {storagePercentage > 85 && (
+                                <div className="storage-warning-banner glass-card">
+                                    <div className="warning-icon-wrap">
+                                        <HardDrive size={24} />
+                                    </div>
+                                    <div className="warning-text">
+                                        <h4>Running out of storage!</h4>
+                                        <p>You've used {Math.round(storagePercentage)}% of your free 5GB. Consider deleting old builds.</p>
+                                    </div>
+                                    <button className="btn btn-primary btn-sm" onClick={() => setCurrentPage('upload')}>Manage Files</button>
+                                </div>
+                            )}
+
+                            <div className="dash-engagement-row">
+                                {/* Quick Actions */}
+                                <div className="glass-card dash-engagement-card">
+                                    <div className="dash-card-header">
+                                        <h3>Quick Actions</h3>
+                                    </div>
+                                    <div className="quick-actions-grid">
+                                        <button className="quick-action-btn" onClick={() => setCurrentPage('upload')}>
+                                            <div className="qa-icon" style={{ background: '#7c3aed15', color: '#7c3aed' }}><Upload size={20} /></div>
+                                            <span>Upload APK</span>
+                                        </button>
+                                        <button className="quick-action-btn" onClick={() => navigate('/blog')}>
+                                            <div className="qa-icon" style={{ background: '#06b6d415', color: '#06b6d4' }}><Package size={20} /></div>
+                                            <span>Guides</span>
+                                        </button>
+                                        <button className="quick-action-btn" onClick={() => setCurrentPage('profile')}>
+                                            <div className="qa-icon" style={{ background: '#10b98115', color: '#10b981' }}><Settings size={20} /></div>
+                                            <span>Settings</span>
+                                        </button>
+                                        <button className="quick-action-btn" onClick={() => navigate('/')}>
+                                            <div className="qa-icon" style={{ background: '#f59e0b15', color: '#f59e0b' }}><Bell size={20} /></div>
+                                            <span>Updates</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activity */}
+                                <div className="glass-card dash-engagement-card">
+                                    <div className="dash-card-header">
+                                        <h3>Recent Activity</h3>
+                                        <span className="dash-chart-total">Live Feed</span>
+                                    </div>
+                                    <div className="activity-feed">
+                                        {stats.recentActivity.map(act => (
+                                            <div key={act.id} className="activity-item">
+                                                <div className={`activity-icon-dot ${act.type}`} />
+                                                <div className="activity-content">
+                                                    <p className="activity-text">{act.text}</p>
+                                                    <span className="activity-time">{act.time}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Charts Row */}
                             <div className="dash-charts-row">
                                 {/* Downloads Chart */}
@@ -350,8 +416,8 @@ const Dashboard = ({ activePage = 'overview' }) => {
                         <ProfileSettings />
                     )}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

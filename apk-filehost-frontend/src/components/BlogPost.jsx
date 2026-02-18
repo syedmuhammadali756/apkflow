@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, Calendar, User, Clock, Share2, Twitter, Linkedin, Facebook } from './Icons';
 import './BlogPost.css';
+
+// Reading progress hook
+const useReadingProgress = () => {
+    const [progress, setProgress] = useState(0);
+    useEffect(() => {
+        const update = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            setProgress(docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0);
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        return () => window.removeEventListener('scroll', update);
+    }, []);
+    return progress;
+};
 
 const blogContent = {
     1: {
@@ -123,6 +138,11 @@ const blogContent = {
 const BlogPost = () => {
     const { id } = useParams();
     const post = blogContent[id];
+    const progress = useReadingProgress();
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+    };
 
     if (!post) {
         return (
@@ -135,6 +155,8 @@ const BlogPost = () => {
 
     return (
         <div className="blog-post-page">
+            {/* Reading Progress Bar */}
+            <div className="reading-progress-bar" style={{ width: `${progress}%` }} />
             <div className="blog-post-container">
 
                 {/* Header */}
@@ -171,10 +193,10 @@ const BlogPost = () => {
                 <div className="post-footer">
                     <h3>Share this article</h3>
                     <div className="share-buttons">
-                        <button className="share-btn twitter"><Twitter size={18} /></button>
-                        <button className="share-btn linkedin"><Linkedin size={18} /></button>
-                        <button className="share-btn facebook"><Facebook size={18} /></button>
-                        <button className="share-btn copy"><Share2 size={18} /> Copy Link</button>
+                        <button className="share-btn twitter" onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`, '_blank')}><Twitter size={18} /></button>
+                        <button className="share-btn linkedin" onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')}><Linkedin size={18} /></button>
+                        <button className="share-btn facebook" onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}><Facebook size={18} /></button>
+                        <button className="share-btn copy" onClick={handleCopyLink}><Share2 size={18} /> Copy Link</button>
                     </div>
                 </div>
 

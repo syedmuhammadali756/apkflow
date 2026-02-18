@@ -1,7 +1,28 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield } from './Icons';
+import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield, Cpu } from './Icons';
+
+// AI Smart Rename: extract clean name from APK filename
+const suggestApkName = (filename) => {
+    // Remove .apk extension
+    let name = filename.replace(/\.apk$/i, '');
+    // Extract version (e.g., v1.2.3, 1.2.3, -v2.3.1)
+    const versionMatch = name.match(/[-_]v?(\d+\.\d+(?:\.\d+)?(?:\.\d+)?)/i);
+    const version = versionMatch ? versionMatch[1] : null;
+    // Remove common suffixes
+    name = name.replace(/[-_](release|debug|unsigned|signed|final|prod|staging|qa|test|v?\d+\.\d+(?:\.\d+)?(?:\.\d+)?)/gi, '');
+    // Remove package prefix (com.example.app -> app)
+    if (name.includes('.')) {
+        const parts = name.split('.');
+        name = parts[parts.length - 1];
+    }
+    // Remove remaining separators and capitalize
+    name = name.replace(/[-_]+/g, ' ').trim();
+    name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    if (!name || name.length < 2) return null;
+    return version ? `${name} v${version}` : name;
+};
 import './FileUpload.css';
 
 const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
@@ -17,6 +38,8 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
     const [allowedDomain, setAllowedDomain] = useState('');
     const [isDomainLocked, setIsDomainLocked] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
+    const [aiSuggestion, setAiSuggestion] = useState(null);
+    const [aiDismissed, setAiDismissed] = useState(false);
 
     // Limits
     const MAX_UPLOADS = 3;
@@ -50,6 +73,10 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
         const maxSize = 1024 * 1024 * 1024; // 1GB with Tebi.io
         if (selectedFile.size > maxSize) { setError('File size must be less than 1GB'); return; }
         setFile(selectedFile);
+        // AI Smart Rename
+        const suggestion = suggestApkName(selectedFile.name);
+        setAiSuggestion(suggestion);
+        setAiDismissed(false);
     };
 
     const handleUpload = async () => {
@@ -332,6 +359,34 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0 }) => {
                     </div>
                 )}
             </div>
+
+            {/* AI Smart Rename Suggestion */}
+            {file && !uploading && aiSuggestion && !aiDismissed && (
+                <div className="ai-rename-card">
+                    <div className="ai-rename-header">
+                        <Cpu size={14} />
+                        <span>AI Smart Rename</span>
+                        <span className="ai-rename-badge">Suggestion</span>
+                    </div>
+                    <div className="ai-rename-body">
+                        <div className="ai-rename-suggestion">{aiSuggestion}</div>
+                        <div className="ai-rename-actions">
+                            <button
+                                className="ai-accept-btn"
+                                onClick={() => { setCustomName(aiSuggestion); setAiDismissed(true); }}
+                            >
+                                ✓ Use This Name
+                            </button>
+                            <button
+                                className="ai-dismiss-btn"
+                                onClick={() => setAiDismissed(true)}
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Options (shown when file is selected) */}
             {file && !uploading && (
