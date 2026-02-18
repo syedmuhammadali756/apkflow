@@ -56,6 +56,16 @@ const Header = () => {
                 </Link>
 
                 <nav className={`header-nav ${mobileOpen ? 'open' : ''}`}>
+                    {/* Mobile close button inside nav */}
+                    {mobileOpen && (
+                        <button
+                            className="mobile-nav-close"
+                            onClick={() => setMobileOpen(false)}
+                            aria-label="Close menu"
+                        >
+                            <X size={24} />
+                        </button>
+                    )}
                     <ul className="nav-list">
                         {navLinks.map((link, idx) => (
                             <li key={idx} className={link.isDropdown ? 'has-dropdown' : ''}>

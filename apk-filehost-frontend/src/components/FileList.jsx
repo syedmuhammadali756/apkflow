@@ -279,6 +279,13 @@ const FileList = ({ files, onDelete, onRename }) => {
 
                                     {showQR === file.fileId && (
                                         <div className="file-qr-section">
+                                            <button
+                                                className="qr-close-btn"
+                                                onClick={() => setShowQR(null)}
+                                                title="Close QR"
+                                            >
+                                                <X size={18} />
+                                            </button>
                                             <div className="qr-container">
                                                 <img src={getQRUrl(file.downloadLink)} alt="QR Code" className="file-qr-img" />
                                             </div>
