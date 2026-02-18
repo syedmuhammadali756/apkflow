@@ -468,10 +468,9 @@ router.post('/forgot-password', async (req, res) => {
 
         const user = await User.findOne({ email: email.toLowerCase() }).select('+resetCode +resetCodeExpiry +resetAttempts');
         if (!user) {
-            // Don't reveal if email exists — always show success
-            return res.json({
-                success: true,
-                message: 'If an account with that email exists, a reset code has been sent.'
+            return res.status(404).json({
+                success: false,
+                message: 'No account found with this email address.'
             });
         }
 
@@ -516,7 +515,7 @@ router.post('/verify-reset-code', async (req, res) => {
             return res.status(400).json({ success: false, message: 'User ID and code are required' });
         }
 
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).select('+resetCode +resetCodeExpiry');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
