@@ -619,3 +619,45 @@ input:checked+.slider:before {
 .ai-dismiss-btn:hover {
     color: var(--text-primary);
 }
+
+/* ========== Mobile FileUpload ========== */
+@media (max-width: 768px) {
+
+    /* Upload success: stack vertically */
+    .upload-success {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    /* Link actions: full width */
+    .link-actions {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .link-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Upload zone: comfortable touch target */
+    .upload-zone {
+        padding: var(--space-8) var(--space-4);
+    }
+
+    .upload-zone-icon {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .upload-zone {
+        padding: var(--space-6) var(--space-3);
+    }
+
+    .upload-zone h3 {
+        font-size: var(--text-base);
+    }
+}

@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, [token]);
 
-    // Periodic suspension check — every 30 seconds
+    // Periodic suspension/removal check — every 5 seconds for near-instant force-logout
     useEffect(() => {
         if (!token || !isAuthenticated) return;
 
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
                     logout();
                 }
             }
-        }, 30000);
+        }, 5000);
 
         return () => clearInterval(interval);
     }, [token, isAuthenticated]);

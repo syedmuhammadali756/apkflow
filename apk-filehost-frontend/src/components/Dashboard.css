@@ -700,3 +700,114 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ========== Mobile Dashboard ========== */
+@media (max-width: 768px) {
+
+    /* Sidebar: slide off-screen, overlay on open */
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 60;
+        width: 280px;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Main content: full width */
+    .dashboard-main {
+        margin-left: 0;
+    }
+
+    /* Topbar: show hamburger */
+    .topbar-menu {
+        display: flex;
+    }
+
+    .topbar-username {
+        display: none;
+    }
+
+    .dashboard-topbar {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    /* Content area */
+    .dashboard-content {
+        padding: var(--space-4);
+    }
+
+    /* Stats grid: 2 columns on mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+    }
+
+    .stat-card {
+        padding: var(--space-4);
+    }
+
+    .stat-value {
+        font-size: var(--text-2xl);
+    }
+
+    /* Engagement row: single column */
+    .dash-engagement-row {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    /* Storage warning banner: stack vertically */
+    .storage-warning-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+        padding: var(--space-4);
+    }
+
+    .storage-warning-banner .btn {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Mini chart */
+    .mini-chart {
+        height: 80px;
+    }
+
+    /* Storage ring */
+    .storage-ring-container {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Stats grid: single column on very small screens */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-content {
+        padding: var(--space-3);
+    }
+
+    .topbar-title h1 {
+        font-size: var(--text-base);
+    }
+
+    .stat-card {
+        padding: var(--space-3);
+    }
+}
