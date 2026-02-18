@@ -115,11 +115,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
                     downloadsToday: s.downloadsToday || 0,
                     chartData: s.chartData || [],
                     topFiles: s.topFiles || [],
-                    recentActivity: s.recentActivity || [
-                        { id: 1, type: 'upload', text: 'You uploaded "Snapchat_Beta.apk"', time: '2 mins ago' },
-                        { id: 2, type: 'download', text: 'Someone downloaded "WhatsApp_Mod.apk"', time: '45 mins ago' },
-                        { id: 3, type: 'upload', text: 'You uploaded "Instagram_Lite.apk"', time: '3 hours ago' },
-                    ]
+                    recentActivity: s.recentActivity || []
                 });
             }
         } catch (error) {

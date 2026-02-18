@@ -66,6 +66,34 @@ router.get('/overview', auth, async (req, res) => {
                 size: f.fileSize
             }));
 
+        // Recent Activity (uploads and downloads)
+        const recentUploads = await File.find({ userId, isActive: true })
+            .sort({ uploadedAt: -1 })
+            .limit(5);
+
+        const recentDownloads = await DownloadLog.find({ userId: new mongoose.Types.ObjectId(userId) })
+            .sort({ timestamp: -1 })
+            .limit(5);
+
+        const activity = [
+            ...recentUploads.map(f => ({
+                id: `u-${f._id}`,
+                type: 'upload',
+                text: `You uploaded "${f.customName || f.originalName}"`,
+                timestamp: f.uploadedAt,
+                time: formatDateDistance(f.uploadedAt)
+            })),
+            ...recentDownloads.map(d => ({
+                id: `d-${d._id}`,
+                type: 'download',
+                text: `Someone downloaded "${d.fileName}"`,
+                timestamp: d.timestamp,
+                time: formatDateDistance(d.timestamp)
+            }))
+        ]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 5);
+
         // Downloads today
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
@@ -88,9 +116,20 @@ router.get('/overview', auth, async (req, res) => {
                 storageUsed: user?.totalStorageUsed || totalStorage,
                 maxFiles: 3,
                 chartData,
-                topFiles
+                topFiles,
+                recentActivity: activity
             }
         });
+
+        // Helper function for time distance (approximate for node)
+        function formatDateDistance(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - new Date(date)) / 1000);
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+            return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        }
     } catch (error) {
         console.error('Stats overview error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
