@@ -18,17 +18,17 @@ const Footer = () => {
                             Free, fast, and secure APK file hosting. Upload your files and get instant download links.
                         </p>
                         <div className="footer-social">
-                            <a href="https://github.com/syedmuhammadali756" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="GitHub">
-                                <GitHub size={18} />
-                            </a>
-                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Twitter">
-                                <Twitter size={18} />
-                            </a>
                             <a href="https://www.facebook.com/SyedMuhammadAli.DrWebJr/" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Facebook">
                                 <Facebook size={18} />
                             </a>
                             <a href="https://pk.linkedin.com/in/syed-muhammad-abubaker-dr-web-jr" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="LinkedIn">
                                 <Linkedin size={18} />
+                            </a>
+                            <a href="https://www.instagram.com/drwebjr/" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Instagram">
+                                <Instagram size={18} />
+                            </a>
+                            <a href="mailto:syedmuhammadali756@gmail.com" className="social-link" aria-label="Email">
+                                <Mail size={18} />
                             </a>
                         </div>
                     </div>

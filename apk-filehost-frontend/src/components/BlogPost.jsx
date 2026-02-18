@@ -132,6 +132,54 @@ const blogContent = {
 
       <p>I hope it saves you some time. Happy coding.</p>
     `
+    },
+    6: {
+        title: 'APK Versioning: A Clean Naming Convention That Works',
+        date: 'Jan 28, 2026',
+        readTime: '5 min read',
+        author: 'Team APKFlow',
+        category: 'guide',
+        content: `
+      <p>Messy filenames like "app-debug-final-FINAL2.apk" are a nightmare. They confuse your testers and make your project look unprofessional. Sending a client a file with "final-v2" in it suggests a lack of process.</p>
+      
+      <h3>The Semantic Approach</h3>
+      <p>We recommend a simple pattern: <code>[AppName]-[Version]-[Environment].apk</code>. For example, <code>APKFlow-v1.2.0-staging.apk</code>. It is searchable, sortable, and professional.</p>
+      
+      <h3>Why It Matters</h3>
+      <p>When you have a clean naming convention, our AI Smart Rename feature works even better, and your dashboard history becomes a searchable archive instead of a pile of junk. It also helps your CI/CD pipelines identify builds correctly.</p>
+    `
+    },
+    7: {
+        title: 'QR Codes for APK Distribution: The Underrated Trick',
+        date: 'Jan 22, 2026',
+        readTime: '3 min read',
+        author: 'Dr Web Jr.',
+        category: 'workflow',
+        content: `
+      <p>Imagine showing up to a client meeting and instead of asking for an email address or fumbling with cables, you just hold up your phone with a QR code displayed.</p>
+      
+      <h3>Zero Friction Distribution</h3>
+      <p>They scan it with their camera, tap download, and the app is on their phone before you've even started the presentation. That's the power of APKFlow's per-file QR codes. It works because it eliminates the middle-man (email/Slack).</p>
+      
+      <h3>How to Use It</h3>
+      <p>Every file on your dashboard has a QR icon. Click it to generate a high-resolution code instantly. You can even print these for hardware testing labs or event booths.</p>
+    `
+    },
+    8: {
+        title: 'How AI Is Changing Mobile App Testing in 2026',
+        date: 'Jan 15, 2026',
+        readTime: '7 min read',
+        author: 'Team APKFlow',
+        category: 'ai',
+        content: `
+      <p>AI isn't just about chatbots. In the world of mobile development, it's about removing the "busy work" from your workflow so you can focus on building features.</p>
+      
+      <h3>Beyond Smart Rename</h3>
+      <p>In 2026, we're seeing AI systems that can automatically distribute builds to the right testers based on their previous activity and device compatibility. Imagine a system that knows exactly which QA engineer has a Pixel 9 Pro available for testing.</p>
+      
+      <h3>The Future of APKFlow</h3>
+      <p>We're looking into AI-powered crash log analysis and automated screenshot generation for your download pages. The goal is simple: let you focus on code while we handle the distribution and feedback loop.</p>
+    `
     }
 };
 
