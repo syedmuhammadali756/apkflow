@@ -490,11 +490,11 @@
 .features-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-5);
+    gap: var(--space-8);
 }
 
 .feature-card {
-    padding: var(--space-7);
+    padding: var(--space-10);
     animation: fadeInUp 0.6s ease both;
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
@@ -949,14 +949,14 @@
 .testimonials-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
+    gap: var(--space-10);
 }
 
 .testimonial-card {
-    padding: var(--space-7);
+    padding: var(--space-10);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
