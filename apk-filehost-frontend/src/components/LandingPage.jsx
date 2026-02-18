@@ -333,7 +333,221 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Protected Download Links */}
+            <section className="section feature-spotlight-section feature-spot-reverse">
+                <div className="container">
+                    <div className="feature-spot-card">
+                        <div className="feature-spot-glow fsg-green" />
+                        <div className="feature-spot-content">
+                            <div className="feature-spot-right">
+                                <div className="feature-spot-badge" style={{ color: '#10b981', borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.1)' }}>
+                                    <Shield size={14} />
+                                    <span>Security Feature</span>
+                                </div>
+                                <h2>Password <span className="gradient-text-green">Protected</span> Links</h2>
+                                <p>
+                                    Lock your APK downloads with a password. Share with only trusted testers
+                                    and clients — nobody else can access your file without the secret key.
+                                </p>
+                                <ul className="spot-feature-list">
+                                    <li><Check size={16} /> Set custom password per file</li>
+                                    <li><Check size={16} /> One-click lock / unlock from dashboard</li>
+                                    <li><Check size={16} /> Download attempts logged with IP</li>
+                                    <li><Check size={16} /> Revoke access anytime instantly</li>
+                                </ul>
+                                <Link to="/register" className="btn btn-primary">
+                                    Get Protected Links <ArrowRight size={16} />
+                                </Link>
+                            </div>
+                            <div className="feature-spot-left">
+                                <div className="spot-demo-card glass-card">
+                                    <div className="spot-demo-header">
+                                        <Shield size={16} />
+                                        <span>Protected Link</span>
+                                        <span className="spot-demo-badge spot-badge-green">Locked</span>
+                                    </div>
+                                    <div className="spot-demo-file-row">
+                                        <div className="spot-demo-file-icon"><Package size={20} /></div>
+                                        <div className="spot-demo-file-info">
+                                            <span className="spot-file-name">MyApp v2.3.1.apk</span>
+                                            <span className="spot-file-meta">12.4 MB · 3 downloads</span>
+                                        </div>
+                                        <div className="spot-lock-icon">🔒</div>
+                                    </div>
+                                    <div className="spot-password-section">
+                                        <div className="spot-pass-label">Enter password to download</div>
+                                        <div className="spot-pass-input-row">
+                                            <div className="spot-pass-input">
+                                                <span className="spot-pass-dots">●●●●●●●●</span>
+                                            </div>
+                                            <button className="spot-pass-btn">Unlock</button>
+                                        </div>
+                                    </div>
+                                    <div className="spot-access-log">
+                                        <div className="spot-log-label">Access Log</div>
+                                        <div className="spot-log-row spot-log-ok"><span className="spot-log-dot green"></span><span>124.0.0.1 · Unlocked · 2min ago</span></div>
+                                        <div className="spot-log-row spot-log-fail"><span className="spot-log-dot red"></span><span>Unknown · Wrong password · 5min ago</span></div>
+                                        <div className="spot-log-row spot-log-ok"><span className="spot-log-dot green"></span><span>192.168.1.5 · Unlocked · 1hr ago</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* QR Code Downloads */}
+            <section className="section feature-spotlight-section">
+                <div className="container">
+                    <div className="feature-spot-card">
+                        <div className="feature-spot-glow fsg-orange" />
+                        <div className="feature-spot-content">
+                            <div className="feature-spot-left">
+                                <div className="feature-spot-badge" style={{ color: '#f97316', borderColor: 'rgba(249,115,22,0.3)', background: 'rgba(249,115,22,0.1)' }}>
+                                    <QrCode size={14} />
+                                    <span>QR Feature</span>
+                                </div>
+                                <h2>Instant <span className="gradient-text-orange">QR Code</span> Downloads</h2>
+                                <p>
+                                    Every file gets a unique QR code — instantly. Perfect for sharing
+                                    at client demos, team meetings, or conferences. Scan and it downloads.
+                                </p>
+                                <ul className="spot-feature-list">
+                                    <li><Check size={16} /> Auto-generated QR for every file</li>
+                                    <li><Check size={16} /> Download as PNG, share anywhere</li>
+                                    <li><Check size={16} /> Works with any QR scanner app</li>
+                                    <li><Check size={16} /> Also works with password protection</li>
+                                </ul>
+                                <Link to="/register" className="btn btn-primary">
+                                    Generate Your QR <ArrowRight size={16} />
+                                </Link>
+                            </div>
+                            <div className="feature-spot-right">
+                                <div className="spot-demo-card glass-card">
+                                    <div className="spot-demo-header">
+                                        <QrCode size={16} />
+                                        <span>QR Download</span>
+                                        <span className="spot-demo-badge spot-badge-orange">Live</span>
+                                    </div>
+                                    <div className="qr-demo-center">
+                                        <div className="qr-demo-wrap">
+                                            <div className="qr-demo-grid">
+                                                {[...Array(49)].map((_, i) => (
+                                                    <div key={i} className={`qr-cell ${Math.random() > 0.5 ? 'filled' : ''}`} />
+                                                ))}
+                                            </div>
+                                            <div className="qr-scan-line" />
+                                        </div>
+                                        <div className="qr-scan-label">
+                                            <span className="qr-scan-pulse" />
+                                            Scan to download
+                                        </div>
+                                    </div>
+                                    <div className="qr-demo-stats">
+                                        <div className="qr-stat-pill"><Download size={12} /> 247 scans</div>
+                                        <div className="qr-stat-pill"><Zap size={12} /> Instant DL</div>
+                                    </div>
+                                    <div className="qr-share-row">
+                                        <button className="qr-share-btn"><Download size={14} /> Save PNG</button>
+                                        <button className="qr-share-btn"><ArrowRight size={14} /> Share</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Download Analytics */}
+            <section className="section feature-spotlight-section feature-spot-reverse">
+                <div className="container">
+                    <div className="feature-spot-card">
+                        <div className="feature-spot-glow fsg-cyan" />
+                        <div className="feature-spot-content">
+                            <div className="feature-spot-right">
+                                <div className="feature-spot-badge" style={{ color: '#06b6d4', borderColor: 'rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.1)' }}>
+                                    <BarChart size={14} />
+                                    <span>Analytics</span>
+                                </div>
+                                <h2>Live Download <span className="gradient-text-cyan">Analytics</span></h2>
+                                <p>
+                                    Know exactly who downloaded your APK, when, and from where.
+                                    Real-time stats help you track distribution and measure reach.
+                                </p>
+                                <ul className="spot-feature-list">
+                                    <li><Check size={16} /> Real-time download counter</li>
+                                    <li><Check size={16} /> Geo-location breakdown by region</li>
+                                    <li><Check size={16} /> Daily download trend chart</li>
+                                    <li><Check size={16} /> Recent activity feed with timestamps</li>
+                                </ul>
+                                <Link to="/register" className="btn btn-primary">
+                                    See Your Analytics <ArrowRight size={16} />
+                                </Link>
+                            </div>
+                            <div className="feature-spot-left">
+                                <div className="spot-demo-card glass-card analytics-demo-card">
+                                    <div className="spot-demo-header">
+                                        <BarChart size={16} />
+                                        <span>Analytics · MyApp v2.3.1</span>
+                                        <span className="spot-demo-badge spot-badge-cyan">Live</span>
+                                    </div>
+                                    <div className="analytics-demo-stats">
+                                        <div className="analytics-stat-tile">
+                                            <span className="ast-num">247</span>
+                                            <span className="ast-lbl">Total Downloads</span>
+                                        </div>
+                                        <div className="analytics-stat-tile">
+                                            <span className="ast-num" style={{ color: '#10b981' }}>+18</span>
+                                            <span className="ast-lbl">Today</span>
+                                        </div>
+                                        <div className="analytics-stat-tile">
+                                            <span className="ast-num" style={{ color: '#f59e0b' }}>3</span>
+                                            <span className="ast-lbl">Countries</span>
+                                        </div>
+                                    </div>
+                                    <div className="analytics-chart-label">Downloads — last 7 days</div>
+                                    <div className="analytics-bar-chart">
+                                        {[
+                                            { day: 'Mon', val: 22, h: 30 },
+                                            { day: 'Tue', val: 38, h: 52 },
+                                            { day: 'Wed', val: 15, h: 20 },
+                                            { day: 'Thu', val: 55, h: 75 },
+                                            { day: 'Fri', val: 47, h: 64 },
+                                            { day: 'Sat', val: 33, h: 45 },
+                                            { day: 'Sun', val: 18, h: 25 },
+                                        ].map((d, i) => (
+                                            <div key={i} className="abc-wrap">
+                                                <div className="abc-tooltip">{d.val}</div>
+                                                <div className="abc-bar" style={{ height: `${d.h}%`, animationDelay: `${i * 0.07}s` }} />
+                                                <span className="abc-label">{d.day}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="analytics-geo">
+                                        <div className="geo-label">Top Regions</div>
+                                        {[
+                                            { name: 'Pakistan', pct: 68, color: '#7c3aed' },
+                                            { name: 'India', pct: 20, color: '#06b6d4' },
+                                            { name: 'Other', pct: 12, color: '#f59e0b' },
+                                        ].map((g, i) => (
+                                            <div key={i} className="geo-row">
+                                                <span className="geo-name">{g.name}</span>
+                                                <div className="geo-bar">
+                                                    <div className="geo-fill" style={{ width: `${g.pct}%`, background: g.color, animationDelay: `${i * 0.15 + 0.3}s` }} />
+                                                </div>
+                                                <span className="geo-pct">{g.pct}%</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* How It Works */}
+
             <section className="section how-section" id="how-it-works">
                 <div className="container">
                     <div className="section-header">
