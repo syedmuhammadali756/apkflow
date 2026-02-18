@@ -1442,3 +1442,234 @@
         padding: var(--space-6);
     }
 }
+
+/* =============================================
+   PREMIUM ANIMATIONS — LANDING PAGE
+   ============================================= */
+
+/* ---- Hero badge: animated glow border ---- */
+.hero-badge {
+    animation: borderGlow 3s ease-in-out infinite;
+    transition: transform 0.2s ease;
+}
+
+.hero-badge:hover {
+    transform: translateY(-2px);
+}
+
+/* ---- Hero title: shimmer ---- */
+.hero-title .gradient-text {
+    background: linear-gradient(270deg, #a78bfa, #06b6d4, #7c3aed, #a78bfa);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 5s ease infinite;
+}
+
+/* ---- Hero CTA buttons ---- */
+.hero-actions .btn-primary {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both 0.4s;
+}
+
+.hero-actions .btn-primary:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.5);
+}
+
+.hero-actions .btn-ghost {
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both 0.5s;
+    transition: transform 0.25s ease;
+}
+
+.hero-actions .btn-ghost:hover {
+    transform: translateY(-2px);
+}
+
+/* ---- Hero floating illustration ---- */
+.hero-right {
+    animation: floatSlow 6s ease-in-out infinite;
+}
+
+/* ---- Features section: card hover ---- */
+.feature-card {
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feature-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(124, 58, 237, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-color: rgba(124, 58, 237, 0.35);
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* Icon glow on feature card hover */
+.feature-icon {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.15) rotate(-5deg);
+    box-shadow: 0 0 24px rgba(124, 58, 237, 0.5);
+}
+
+/* ---- Stats numbers: count-up entrance ---- */
+.stat-number {
+    animation: countUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stat-item:nth-child(1) .stat-number {
+    animation-delay: 0.1s;
+}
+
+.stat-item:nth-child(2) .stat-number {
+    animation-delay: 0.2s;
+}
+
+.stat-item:nth-child(3) .stat-number {
+    animation-delay: 0.3s;
+}
+
+.stat-item:nth-child(4) .stat-number {
+    animation-delay: 0.4s;
+}
+
+/* ---- Steps: stagger fade-in ---- */
+.step-card {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.step-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.step-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.step-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.step-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Testimonials: 3D hover tilt ---- */
+.testimonial-card {
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-6px) rotateX(3deg);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+/* ---- CTA section: glowing button ---- */
+.cta-card .btn-primary {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+.cta-card .btn-primary:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 16px 48px rgba(124, 58, 237, 0.6);
+    animation: none;
+}
+
+/* ---- Pricing card: gradient animated border ---- */
+.pricing-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: borderGlow 4s ease-in-out infinite;
+}
+
+.pricing-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(124, 58, 237, 0.2);
+}
+
+/* ---- Navigation links hover: underline slide ---- */
+.footer-link,
+.footer-nav a {
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.footer-link::after,
+.footer-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--brand-primary-light);
+    transition: width 0.3s ease;
+}
+
+.footer-link:hover::after,
+.footer-nav a:hover::after {
+    width: 100%;
+}
+
+/* ---- Section header: entrance ---- */
+.section-header {
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- AI section: animated example ---- */
+.ai-output-card {
+    animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both 0.3s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ai-output-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(124, 58, 237, 0.3);
+}
+
+/* ---- Comparison table rows: hover highlight ---- */
+.comparison-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.comparison-table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.06);
+}

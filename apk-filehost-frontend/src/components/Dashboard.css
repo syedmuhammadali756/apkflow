@@ -811,3 +811,250 @@
         padding: var(--space-3);
     }
 }
+
+/* =============================================
+   PREMIUM ANIMATIONS — DASHBOARD
+   ============================================= */
+
+/* ---- Stat Cards: entrance + hover ---- */
+.dash-stat-card {
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shimmer overlay on each stat card */
+.dash-stat-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.035) 50%,
+            transparent 60%);
+    background-size: 200% 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dash-stat-card:hover::after {
+    opacity: 1;
+    animation: shimmer 1.2s ease;
+}
+
+/* Stagger entrance for each card */
+.dash-stats-grid .glass-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.dash-stats-grid .glass-card:nth-child(2) {
+    animation-delay: 0.12s;
+}
+
+.dash-stats-grid .glass-card:nth-child(3) {
+    animation-delay: 0.19s;
+}
+
+.dash-stats-grid .glass-card:nth-child(4) {
+    animation-delay: 0.26s;
+}
+
+.dash-stat-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(124, 58, 237, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border-color: rgba(124, 58, 237, 0.35);
+}
+
+/* Glow under stat icon on hover */
+.dash-stat-card:hover .dash-stat-icon {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(124, 58, 237, 0.2);
+    transform: scale(1.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dash-stat-value {
+    animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.3s;
+}
+
+/* ---- Mini Progress Bar: animated grow ---- */
+.mini-progress-bar {
+    animation: barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) both 0.6s;
+    transform-origin: left center;
+}
+
+/* ---- Bar Chart: animated bars ---- */
+.chart-bar {
+    animation: barGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: bottom center;
+}
+
+/* Stagger chart bars */
+.chart-bar-wrap:nth-child(1) .chart-bar {
+    animation-delay: 0.05s;
+}
+
+.chart-bar-wrap:nth-child(2) .chart-bar {
+    animation-delay: 0.10s;
+}
+
+.chart-bar-wrap:nth-child(3) .chart-bar {
+    animation-delay: 0.15s;
+}
+
+.chart-bar-wrap:nth-child(4) .chart-bar {
+    animation-delay: 0.20s;
+}
+
+.chart-bar-wrap:nth-child(5) .chart-bar {
+    animation-delay: 0.25s;
+}
+
+.chart-bar-wrap:nth-child(6) .chart-bar {
+    animation-delay: 0.30s;
+}
+
+.chart-bar-wrap:nth-child(7) .chart-bar {
+    animation-delay: 0.35s;
+}
+
+.chart-bar:hover {
+    filter: brightness(1.3);
+    transform: scaleX(1.08);
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+/* ---- Chart cards: entrance ---- */
+.dash-chart-card {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.2s;
+}
+
+/* ---- Storage ring: pulsing outer ring ---- */
+.storage-ring-container::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(124, 58, 237, 0.3);
+    animation: ringPulse 2.5s ease-in-out infinite;
+}
+
+/* ---- Sidebar: active link indicator ---- */
+.sidebar-link.active {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--brand-primary-light);
+    box-shadow: inset 3px 0 0 #7c3aed;
+    animation: borderGlow 3s ease infinite;
+}
+
+.sidebar-link {
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.sidebar-link:hover {
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--text-primary);
+    padding-left: calc(var(--space-4) + 4px);
+}
+
+/* ---- Topbar avatar: animated ring ---- */
+.topbar-avatar {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4);
+    animation: glowPulse 3s ease-in-out infinite;
+    transition: transform 0.2s ease;
+}
+
+.topbar-avatar:hover {
+    transform: scale(1.08);
+}
+
+/* ---- Live-dot (activity indicator) ---- */
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 2s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    flex-shrink: 0;
+}
+
+/* ---- Top files: stagger entrance ---- */
+.top-file-item {
+    animation: fadeInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.top-file-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.top-file-item:nth-child(2) {
+    animation-delay: 0.18s;
+}
+
+.top-file-item:nth-child(3) {
+    animation-delay: 0.26s;
+}
+
+.top-file-item:nth-child(4) {
+    animation-delay: 0.34s;
+}
+
+.top-file-item:nth-child(5) {
+    animation-delay: 0.42s;
+}
+
+.top-file-item:hover {
+    transform: translateX(4px);
+    background: rgba(124, 58, 237, 0.06);
+    border-radius: var(--radius-md);
+}
+
+/* ---- Activity feed: fade in rows ---- */
+.activity-item {
+    animation: fadeInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: background 0.2s ease;
+}
+
+.activity-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.activity-item:nth-child(2) {
+    animation-delay: 0.18s;
+}
+
+.activity-item:nth-child(3) {
+    animation-delay: 0.26s;
+}
+
+.activity-item:nth-child(4) {
+    animation-delay: 0.34s;
+}
+
+.activity-item:nth-child(5) {
+    animation-delay: 0.42s;
+}
+
+.activity-item:hover {
+    background: rgba(124, 58, 237, 0.05);
+    border-radius: var(--radius-md);
+}
+
+/* ---- Dashboard content sections: entrance ---- */
+.dash-engagement-row {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.35s;
+}
+
+/* ---- Storage bar grow ---- */
+.storage-fill {
+    animation: barGrow 1.2s cubic-bezier(0.16, 1, 0.3, 1) both 0.5s;
+    transform-origin: left center;
+}

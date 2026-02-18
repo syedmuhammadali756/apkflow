@@ -450,3 +450,97 @@
         background: rgba(124, 58, 237, 0.05);
     }
 }
+
+/* =============================================
+   PREMIUM ANIMATIONS — HEADER
+   ============================================= */
+
+/* ---- Header entrance ---- */
+.site-header {
+    animation: pageFadeIn 0.4s ease both;
+    transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* ---- Brand logo: float on hover ---- */
+.header-brand {
+    transition: transform 0.3s ease;
+}
+
+.header-brand:hover {
+    transform: translateY(-2px);
+}
+
+/* ---- Nav links: hover underline slide ---- */
+.nav-link {
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4);
+    border-radius: 2px;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 100%;
+}
+
+/* ---- Auth buttons: glow on primary ---- */
+.auth-buttons .btn-primary {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auth-buttons .btn-primary:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 28px rgba(124, 58, 237, 0.5);
+}
+
+/* ---- User avatar: glow ring ---- */
+.user-avatar {
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.35);
+}
+
+.user-avatar:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.6), 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+/* ---- Dropdown items: stagger slide-in ---- */
+.dropdown-item {
+    animation: fadeInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+}
+
+.dropdown-menu .dropdown-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.dropdown-menu .dropdown-item:nth-child(2) {
+    animation-delay: 0.10s;
+}
+
+.dropdown-menu .dropdown-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.dropdown-menu .dropdown-item:nth-child(4) {
+    animation-delay: 0.20s;
+}
+
+.dropdown-item:hover {
+    padding-left: calc(var(--space-4) + 4px);
+}
+
+/* ---- Mobile toggle: scale on tap ---- */
+.mobile-toggle:active {
+    transform: scale(0.9);
+}
