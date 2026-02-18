@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const File = require('../models/File');
-const { sendApprovalEmail } = require('../utils/emailService');
+const { sendApprovalEmail, sendRejectionEmail } = require('../utils/emailService');
 
 const ADMIN_CODE = process.env.ADMIN_CODE || 'drwebjr2026';
 const ADMIN_SECRET = process.env.JWT_SECRET + '-admin';
@@ -223,6 +223,7 @@ router.post('/approve/:id', adminAuth, async (req, res) => {
 // @desc    Reject a pending user account
 router.post('/reject/:id', adminAuth, async (req, res) => {
     try {
+        const { reason } = req.body;
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -230,6 +231,13 @@ router.post('/reject/:id', adminAuth, async (req, res) => {
 
         user.accountStatus = 'rejected';
         await user.save();
+
+        // Send rejection email with reason
+        try {
+            await sendRejectionEmail(user.email, user.name, reason);
+        } catch (emailErr) {
+            console.error('Rejection email failed:', emailErr);
+        }
 
         res.json({ success: true, message: `User ${user.name} has been rejected.` });
     } catch (error) {

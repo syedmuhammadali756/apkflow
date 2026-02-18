@@ -311,3 +311,9 @@
     padding: var(--space-6);
   }
 }
+
+.auth-forgot {
+  margin-top: var(--space-3);
+  text-align: center;
+  font-size: var(--text-sm);
+}

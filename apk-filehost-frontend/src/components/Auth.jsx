@@ -49,6 +49,15 @@ const Auth = ({ mode = 'login' }) => {
     const [resendLoading, setResendLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
 
+    // Forgot password state
+    const [forgotStep, setForgotStep] = useState(null); // null | 'email' | 'code' | 'newpass' | 'done'
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetUserId, setResetUserId] = useState(null);
+    const [resetCode, setResetCode] = useState('');
+    const [resetToken, setResetToken] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setError('');
@@ -134,10 +143,300 @@ const Auth = ({ mode = 'login' }) => {
         setIsLogin(!isLogin);
         setError('');
         setRegStep('form');
+        setForgotStep(null);
         navigate(isLogin ? '/register' : '/login', { replace: true });
     };
 
-    // OTP Verification Step
+    // === FORGOT PASSWORD HANDLERS ===
+    const handleForgotSubmitEmail = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            const axios = (await import('axios')).default;
+            const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email: resetEmail });
+            if (response.data.success) {
+                setResetUserId(response.data.userId);
+                setForgotStep('code');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to send reset code.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotVerifyCode = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            const axios = (await import('axios')).default;
+            const response = await axios.post(`${API_URL}/api/auth/verify-reset-code`, {
+                userId: resetUserId,
+                code: resetCode
+            });
+            if (response.data.success) {
+                setResetToken(response.data.resetToken);
+                setForgotStep('newpass');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Invalid code.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotResetPassword = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (newPassword !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+        if (newPassword.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
+        setLoading(true);
+        try {
+            const axios = (await import('axios')).default;
+            const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
+                resetToken,
+                newPassword
+            });
+            if (response.data.success) {
+                setForgotStep('done');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to reset password.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ===== FORGOT PASSWORD STEPS =====
+    if (forgotStep === 'email') {
+        return (
+            <div className="auth-page">
+                <div className="auth-visual">
+                    <div className="auth-visual-bg">
+                        <div className="auth-glow auth-glow-1" />
+                        <div className="auth-glow auth-glow-2" />
+                    </div>
+                    <div className="auth-visual-content">
+                        <BrandLogo size={56} />
+                        <h2>APKFlow</h2>
+                        <p>Reset your password securely.</p>
+                    </div>
+                </div>
+                <div className="auth-form-panel">
+                    <div className="auth-form-container">
+                        <div className="auth-form-header">
+                            <div className="auth-step-icon">
+                                <Lock size={32} />
+                            </div>
+                            <h1>Forgot Password</h1>
+                            <p>Enter your email and we'll send you a reset code</p>
+                        </div>
+                        <form onSubmit={handleForgotSubmitEmail} className="auth-form">
+                            <div className="input-group">
+                                <label>Email Address</label>
+                                <div className="input-wrapper">
+                                    <Mail size={18} className="input-icon" />
+                                    <input
+                                        type="email"
+                                        value={resetEmail}
+                                        onChange={(e) => { setResetEmail(e.target.value); setError(''); }}
+                                        placeholder="you@example.com"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                            {error && <div className="auth-error"><span>{error}</span></div>}
+                            <button type="submit" className="btn btn-primary btn-lg auth-submit" disabled={loading}>
+                                {loading ? (
+                                    <><div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Sending...</>
+                                ) : (
+                                    <>Send Reset Code <ArrowRight size={18} /></>
+                                )}
+                            </button>
+                        </form>
+                        <div className="auth-switch">
+                            <span>Remember your password?</span>
+                            <button onClick={() => { setForgotStep(null); setError(''); }} className="auth-switch-btn">Back to Login</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (forgotStep === 'code') {
+        return (
+            <div className="auth-page">
+                <div className="auth-visual">
+                    <div className="auth-visual-bg">
+                        <div className="auth-glow auth-glow-1" />
+                        <div className="auth-glow auth-glow-2" />
+                    </div>
+                    <div className="auth-visual-content">
+                        <BrandLogo size={56} />
+                        <h2>APKFlow</h2>
+                        <p>Check your email for the code.</p>
+                    </div>
+                </div>
+                <div className="auth-form-panel">
+                    <div className="auth-form-container">
+                        <div className="auth-form-header">
+                            <div className="auth-step-icon">
+                                <Shield size={32} />
+                            </div>
+                            <h1>Enter Reset Code</h1>
+                            <p>We've sent a 6-digit code to <strong>{resetEmail}</strong></p>
+                            <p className="auth-spam-tip">💡 Check your <strong>Spam</strong> or <strong>Junk</strong> folder if you can't find it.</p>
+                        </div>
+                        <form onSubmit={handleForgotVerifyCode} className="auth-form">
+                            <div className="input-group">
+                                <label>Reset Code</label>
+                                <div className="input-wrapper">
+                                    <Shield size={18} className="input-icon" />
+                                    <input
+                                        type="text"
+                                        value={resetCode}
+                                        onChange={(e) => { setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+                                        placeholder="Enter 6-digit code"
+                                        maxLength={6}
+                                        required
+                                        autoFocus
+                                        style={{ letterSpacing: '4px', fontSize: '18px', fontWeight: '700', textAlign: 'center' }}
+                                    />
+                                </div>
+                            </div>
+                            {error && <div className="auth-error"><span>{error}</span></div>}
+                            <button type="submit" className="btn btn-primary btn-lg auth-submit" disabled={loading || resetCode.length !== 6}>
+                                {loading ? (
+                                    <><div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Verifying...</>
+                                ) : (
+                                    <>Verify Code <Check size={18} /></>
+                                )}
+                            </button>
+                        </form>
+                        <div className="auth-switch">
+                            <span>Didn't receive code?</span>
+                            <button onClick={() => setForgotStep('email')} className="auth-switch-btn">Try Again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (forgotStep === 'newpass') {
+        return (
+            <div className="auth-page">
+                <div className="auth-visual">
+                    <div className="auth-visual-bg">
+                        <div className="auth-glow auth-glow-1" />
+                        <div className="auth-glow auth-glow-2" />
+                    </div>
+                    <div className="auth-visual-content">
+                        <BrandLogo size={56} />
+                        <h2>APKFlow</h2>
+                        <p>Set your new password.</p>
+                    </div>
+                </div>
+                <div className="auth-form-panel">
+                    <div className="auth-form-container">
+                        <div className="auth-form-header">
+                            <div className="auth-step-icon auth-step-success">
+                                <Lock size={32} />
+                            </div>
+                            <h1>New Password</h1>
+                            <p>Create a strong password for your account</p>
+                        </div>
+                        <form onSubmit={handleForgotResetPassword} className="auth-form">
+                            <div className="input-group">
+                                <label>New Password</label>
+                                <div className="input-wrapper">
+                                    <Lock size={18} className="input-icon" />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={newPassword}
+                                        onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
+                                        placeholder="Min. 6 characters"
+                                        minLength={6}
+                                        required
+                                        autoFocus
+                                    />
+                                    <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="input-group">
+                                <label>Confirm Password</label>
+                                <div className="input-wrapper">
+                                    <Lock size={18} className="input-icon" />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={confirmPassword}
+                                        onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+                                        placeholder="Repeat password"
+                                        minLength={6}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            {error && <div className="auth-error"><span>{error}</span></div>}
+                            <button type="submit" className="btn btn-primary btn-lg auth-submit" disabled={loading}>
+                                {loading ? (
+                                    <><div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Resetting...</>
+                                ) : (
+                                    <>Reset Password <ArrowRight size={18} /></>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (forgotStep === 'done') {
+        return (
+            <div className="auth-page">
+                <div className="auth-visual">
+                    <div className="auth-visual-bg">
+                        <div className="auth-glow auth-glow-1" />
+                        <div className="auth-glow auth-glow-2" />
+                    </div>
+                    <div className="auth-visual-content">
+                        <BrandLogo size={56} />
+                        <h2>APKFlow</h2>
+                        <p>Your password has been reset!</p>
+                    </div>
+                </div>
+                <div className="auth-form-panel">
+                    <div className="auth-form-container">
+                        <div className="auth-form-header">
+                            <div className="auth-step-icon auth-step-success">
+                                <Check size={32} />
+                            </div>
+                            <h1>Password Reset! 🎉</h1>
+                            <p>Your password has been changed successfully. You can now login with your new password.</p>
+                        </div>
+                        <button onClick={() => { setForgotStep(null); setError(''); setIsLogin(true); navigate('/login', { replace: true }); }} className="btn btn-primary btn-lg auth-submit">
+                            Go to Login <ArrowRight size={18} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // OTP Verification Step (Registration)
     if (!isLogin && regStep === 'verify') {
         return (
             <div className="auth-page">
@@ -384,6 +683,14 @@ const Auth = ({ mode = 'login' }) => {
                                 <>{isLogin ? 'Sign In' : 'Create Account'} <ArrowRight size={18} /></>
                             )}
                         </button>
+
+                        {isLogin && (
+                            <div className="auth-forgot">
+                                <button type="button" onClick={() => { setForgotStep('email'); setError(''); }} className="auth-switch-btn">
+                                    Forgot Password?
+                                </button>
+                            </div>
+                        )}
                     </form>
 
                     <div className="auth-switch">

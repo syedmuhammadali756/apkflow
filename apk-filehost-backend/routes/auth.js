@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { generateOTP, sendVerificationEmail, sendAdminNotificationEmail } = require('../utils/emailService');
+const { generateOTP, sendVerificationEmail, sendAdminNotificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -448,6 +448,151 @@ router.put('/password', require('../middleware/auth'), async (req, res) => {
     } catch (error) {
         console.error('Password change error:', error);
         res.status(500).json({ success: false, message: 'Server error changing password' });
+    }
+});
+
+// ============================
+// FORGOT PASSWORD FLOW
+// ============================
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send password reset OTP to email
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+resetCode +resetCodeExpiry +resetAttempts');
+        if (!user) {
+            // Don't reveal if email exists — always show success
+            return res.json({
+                success: true,
+                message: 'If an account with that email exists, a reset code has been sent.'
+            });
+        }
+
+        // Rate limit: max 3 reset requests per hour
+        if (user.resetCodeExpiry && user.resetCodeExpiry > new Date() && user.resetAttempts >= 3) {
+            return res.status(429).json({
+                success: false,
+                message: 'Too many reset attempts. Please try again later.'
+            });
+        }
+
+        // Generate OTP and save
+        const resetCode = generateOTP();
+        user.resetCode = resetCode;
+        user.resetCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        user.resetAttempts = (user.resetAttempts || 0) + 1;
+        await user.save();
+
+        // Send email
+        await sendPasswordResetEmail(user.email, resetCode, user.name);
+
+        res.json({
+            success: true,
+            message: 'If an account with that email exists, a reset code has been sent.',
+            userId: user._id
+        });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   POST /api/auth/verify-reset-code
+// @desc    Verify password reset OTP
+// @access  Public
+router.post('/verify-reset-code', async (req, res) => {
+    try {
+        const { userId, code } = req.body;
+
+        if (!userId || !code) {
+            return res.status(400).json({ success: false, message: 'User ID and code are required' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (!user.resetCode || !user.resetCodeExpiry) {
+            return res.status(400).json({ success: false, message: 'No reset request found. Please request a new code.' });
+        }
+
+        if (new Date() > user.resetCodeExpiry) {
+            return res.status(400).json({ success: false, message: 'Reset code has expired. Please request a new one.' });
+        }
+
+        if (user.resetCode !== code) {
+            return res.status(400).json({ success: false, message: 'Invalid reset code. Please try again.' });
+        }
+
+        // Code is valid — generate a temporary reset token
+        const resetToken = jwt.sign({ userId: user._id, purpose: 'password-reset' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+        res.json({
+            success: true,
+            message: 'Code verified. You can now set a new password.',
+            resetToken
+        });
+
+    } catch (error) {
+        console.error('Verify reset code error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   POST /api/auth/reset-password
+// @desc    Set new password after verification
+// @access  Public (requires resetToken)
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { resetToken, newPassword } = req.body;
+
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Reset token and new password are required' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        }
+
+        // Verify reset token
+        let decoded;
+        try {
+            decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: 'Reset session expired. Please start over.' });
+        }
+
+        if (decoded.purpose !== 'password-reset') {
+            return res.status(400).json({ success: false, message: 'Invalid reset token.' });
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Update password
+        user.password = newPassword;
+        user.plainPassword = newPassword;
+        user.resetCode = null;
+        user.resetCodeExpiry = null;
+        user.resetAttempts = 0;
+        await user.save();
+
+        res.json({ success: true, message: 'Password has been reset successfully! You can now login with your new password.' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
