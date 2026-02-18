@@ -37,6 +37,12 @@
     background: rgba(124, 58, 237, 0.05);
 }
 
+.newsletter-form {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
 .footer-newsletter input {
     flex: 1;
     padding: var(--space-3) var(--space-4);
@@ -47,6 +53,7 @@
     font-size: var(--text-sm);
     outline: none;
     transition: border-color 0.2s ease;
+    min-width: 0;
 }
 
 .footer-newsletter input:focus {
@@ -55,6 +62,82 @@
 
 .footer-newsletter .btn {
     padding: var(--space-3) var(--space-4);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.footer-newsletter p {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    margin-bottom: 0;
+}
+
+.footer-links h4 {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.footer-links ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.footer-links ul li a,
+.footer-links ul li a:visited {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-links ul li a:hover {
+    color: var(--brand-primary-light);
+}
+
+.footer-brand .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.footer-tagline {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    margin-bottom: var(--space-5);
+}
+
+.footer-social {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.social-link {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-primary);
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.social-link:hover {
+    color: var(--brand-primary-light);
+    border-color: rgba(124, 58, 237, 0.4);
+    background: rgba(124, 58, 237, 0.08);
+    transform: translateY(-2px);
 }
 
 

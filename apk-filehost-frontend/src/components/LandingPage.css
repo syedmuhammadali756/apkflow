@@ -220,8 +220,15 @@
 }
 
 .phone-upload-icon {
-    font-size: 28px;
-    margin-bottom: 6px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
 }
 
 .phone-upload-text {
@@ -676,6 +683,9 @@
 }
 
 .ai-demo-file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 11px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.03);
@@ -800,9 +810,23 @@
     transform: translateY(-4px);
 }
 
-.step-emoji {
-    font-size: 36px;
-    margin-bottom: var(--space-3);
+.step-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-xl);
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    color: var(--brand-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.step-card:hover .step-icon-wrap {
+    background: rgba(124, 58, 237, 0.2);
+    transform: scale(1.05);
 }
 
 .step-number {

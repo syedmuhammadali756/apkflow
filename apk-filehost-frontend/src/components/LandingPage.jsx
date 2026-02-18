@@ -65,9 +65,9 @@ const LandingPage = () => {
     ];
 
     const steps = [
-        { num: '01', title: 'Create Free Account', desc: 'Sign up in seconds. No credit card required. Instant access.', emoji: '🚀' },
-        { num: '02', title: 'Upload Your APK', desc: 'Drag & drop your APK. AI suggests a clean name. One click to upload.', emoji: '📦' },
-        { num: '03', title: 'Share the Link', desc: 'Copy your unique download link or QR code and share it anywhere.', emoji: '🔗' },
+        { num: '01', title: 'Create Free Account', desc: 'Sign up in seconds. No credit card required. Instant access.', icon: <Rocket size={28} /> },
+        { num: '02', title: 'Upload Your APK', desc: 'Drag & drop your APK. AI suggests a clean name. One click to upload.', icon: <Upload size={28} /> },
+        { num: '03', title: 'Share the Link', desc: 'Copy your unique download link or QR code and share it anywhere.', icon: <QrCode size={28} /> },
     ];
 
     const testimonials = [
@@ -177,7 +177,7 @@ const LandingPage = () => {
                                         <div className="phone-app-logo">APKFlow</div>
                                     </div>
                                     <div className="phone-upload-area">
-                                        <div className="phone-upload-icon">📦</div>
+                                        <div className="phone-upload-icon"><Package size={28} /></div>
                                         <div className="phone-upload-text">myapp-v2.3.apk</div>
                                         <div className="phone-progress-bar">
                                             <div className="phone-progress-fill" />
@@ -204,10 +204,10 @@ const LandingPage = () => {
                                 <Check size={12} /> Link Copied!
                             </div>
                             <div className="floating-badge badge-2">
-                                🤖 AI: "MyApp v2.3"
+                                <Cpu size={12} /> AI: "MyApp v2.3"
                             </div>
                             <div className="floating-badge badge-3">
-                                📥 New Download
+                                <Download size={12} /> New Download
                             </div>
                         </div>
                     </div>
@@ -309,7 +309,7 @@ const LandingPage = () => {
                                     <div className="ai-demo-input">
                                         <span className="ai-demo-label">Uploaded file</span>
                                         <div className="ai-demo-file">
-                                            📦 com.drwebjr.apkflow-v1.0.0-release.apk
+                                            <Package size={14} /> com.drwebjr.apkflow-v1.0.0-release.apk
                                         </div>
                                     </div>
                                     <div className="ai-demo-processing">
@@ -345,7 +345,7 @@ const LandingPage = () => {
                     <div className="steps-grid">
                         {steps.map((step, i) => (
                             <div key={i} className="step-card">
-                                <div className="step-emoji">{step.emoji}</div>
+                                <div className="step-icon-wrap">{step.icon}</div>
                                 <div className="step-number">{step.num}</div>
                                 <h3>{step.title}</h3>
                                 <p>{step.desc}</p>
