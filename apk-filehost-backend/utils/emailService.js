@@ -455,11 +455,55 @@ const sendPasswordResetEmail = async (to, code, userName) => {
     }
 };
 
+// ============================
+// 6. Account Suspended
+// ============================
+const sendSuspensionEmail = async (to, userName, reason) => {
+    const transporter = createTransporter();
+    const reasonText = reason || 'Violated terms of service.';
+
+    const bodyContent = `
+        ${headingHTML(
+        'Account Suspended',
+        '&#x1F6AB;',
+        `Hi ${userName},`,
+        'Your APKFlow account has been <strong style="color:#f87171;">suspended</strong> by our admin team. All your files have been temporarily deactivated.'
+    )}
+        ${infoBoxHTML([
+        { label: '&#x26A0;&#xFE0F; Status', value: '<span style="background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">Suspended</span>' },
+        { label: '&#x1F4DD; Reason', value: reasonText },
+        { label: '&#x1F4C5; Date', value: new Date().toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }) }
+    ])}
+        ${tipBoxHTML('<strong style="color:#22d3ee;">&#x1F4E9; Appeal:</strong> If you believe this was a mistake, you can reply to this email. Our team will review your case and respond as soon as possible.')}
+    `;
+
+    const mailOptions = {
+        from: {
+            name: 'APKFlow',
+            address: process.env.EMAIL_USER
+        },
+        replyTo: process.env.EMAIL_USER,
+        to: to,
+        subject: `APKFlow - Your Account Has Been Suspended`,
+        text: `Hi ${userName}, your APKFlow account has been suspended. Reason: ${reasonText}. Contact us if you have questions.`,
+        html: buildEmail(bodyContent, `Your APKFlow account has been suspended`)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Suspension email error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     generateOTP,
     sendVerificationEmail,
     sendAdminNotificationEmail,
     sendApprovalEmail,
     sendRejectionEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendSuspensionEmail
 };

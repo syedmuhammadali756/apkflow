@@ -3,7 +3,9 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const File = require('../models/File');
-const { sendApprovalEmail, sendRejectionEmail } = require('../utils/emailService');
+const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail } = require('../utils/emailService');
+const DownloadLog = require('../models/DownloadLog');
+const { deleteFromTebi } = require('../utils/tebiStorage');
 
 const ADMIN_CODE = process.env.ADMIN_CODE || 'drwebjr2026';
 const ADMIN_SECRET = process.env.JWT_SECRET + '-admin';
@@ -138,7 +140,14 @@ router.post('/users/:id/suspend', adminAuth, async (req, res) => {
         // Deactivate all user files
         await File.updateMany({ userId: user._id }, { isActive: false });
 
-        res.json({ success: true, message: `User ${user.name} has been suspended` });
+        // Send suspension email notification
+        try {
+            await sendSuspensionEmail(user.email, user.name, reason);
+        } catch (emailErr) {
+            console.error('Suspension email failed:', emailErr);
+        }
+
+        res.json({ success: true, message: `User ${user.name} has been suspended and notified via email` });
     } catch (error) {
         console.error('Admin suspend error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -242,6 +251,51 @@ router.post('/reject/:id', adminAuth, async (req, res) => {
         res.json({ success: true, message: `User ${user.name} has been rejected.` });
     } catch (error) {
         console.error('Admin reject error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   DELETE /api/admin/users/:id
+// @desc    Permanently remove a user and all their data
+router.delete('/users/:id', adminAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // 1. Delete files from cloud storage
+        const files = await File.find({ userId: user._id });
+        let storageDeleted = 0;
+        for (const file of files) {
+            try {
+                if (file.storageKey) {
+                    await deleteFromTebi(file.storageKey);
+                }
+                storageDeleted++;
+            } catch (storageErr) {
+                console.error(`Failed to delete file ${file.storageKey} from storage:`, storageErr.message);
+            }
+        }
+
+        // 2. Delete all File documents
+        const fileResult = await File.deleteMany({ userId: user._id });
+
+        // 3. Delete all DownloadLog documents
+        const logResult = await DownloadLog.deleteMany({ userId: user._id });
+
+        // 4. Delete the User document
+        await User.findByIdAndDelete(user._id);
+
+        res.json({
+            success: true,
+            message: `User ${user.name} has been permanently removed`,
+            deletedFiles: fileResult.deletedCount,
+            deletedLogs: logResult.deletedCount,
+            storageFilesDeleted: storageDeleted
+        });
+    } catch (error) {
+        console.error('Admin permanent delete error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
