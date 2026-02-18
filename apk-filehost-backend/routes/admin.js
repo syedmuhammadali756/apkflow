@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const File = require('../models/File');
-const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail } = require('../utils/emailService');
+const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail, sendUnsuspensionEmail, sendRemovalEmail } = require('../utils/emailService');
 const DownloadLog = require('../models/DownloadLog');
 const { deleteFromTebi } = require('../utils/tebiStorage');
 
@@ -163,6 +163,8 @@ router.post('/users/:id/unsuspend', adminAuth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        const previousReason = user.suspendReason || 'Policy violation';
+
         user.isSuspended = false;
         user.suspendedAt = undefined;
         user.suspendReason = '';
@@ -171,7 +173,14 @@ router.post('/users/:id/unsuspend', adminAuth, async (req, res) => {
         // Reactivate all user files
         await File.updateMany({ userId: user._id }, { isActive: true });
 
-        res.json({ success: true, message: `User ${user.name} has been unsuspended` });
+        // Send unsuspension email with warning
+        try {
+            await sendUnsuspensionEmail(user.email, user.name, previousReason);
+        } catch (emailErr) {
+            console.error('Unsuspension email failed:', emailErr);
+        }
+
+        res.json({ success: true, message: `User ${user.name} has been unsuspended and notified via email` });
     } catch (error) {
         console.error('Admin unsuspend error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -264,6 +273,11 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        // Save user info before deletion for the email
+        const userEmail = user.email;
+        const userName = user.name;
+        const { reason } = req.body;
+
         // 1. Delete files from cloud storage
         const files = await File.find({ userId: user._id });
         let storageDeleted = 0;
@@ -287,9 +301,16 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
         // 4. Delete the User document
         await User.findByIdAndDelete(user._id);
 
+        // 5. Send permanent removal email
+        try {
+            await sendRemovalEmail(userEmail, userName, reason);
+        } catch (emailErr) {
+            console.error('Removal email failed:', emailErr);
+        }
+
         res.json({
             success: true,
-            message: `User ${user.name} has been permanently removed`,
+            message: `User ${userName} has been permanently removed and notified via email`,
             deletedFiles: fileResult.deletedCount,
             deletedLogs: logResult.deletedCount,
             storageFilesDeleted: storageDeleted

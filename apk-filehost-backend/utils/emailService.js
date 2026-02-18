@@ -498,6 +498,151 @@ const sendSuspensionEmail = async (to, userName, reason) => {
     }
 };
 
+// ============================
+// 7. Account Unsuspended
+// ============================
+const sendUnsuspensionEmail = async (to, userName, previousReason) => {
+    const transporter = createTransporter();
+    const reasonText = previousReason || 'Policy violation';
+
+    const bodyContent = `
+        ${headingHTML(
+        'Account Reinstated',
+        '&#x2705;',
+        `Welcome Back, ${userName}!`,
+        'Good news! Your APKFlow account has been <strong style="color:#4ade80;">reinstated</strong> by our admin team. Your files have been reactivated and your access is fully restored.'
+    )}
+        ${infoBoxHTML([
+        { label: '&#x2705; Status', value: '<span style="background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">Active</span>' },
+        { label: '&#x1F4DD; Previous Reason', value: reasonText },
+        { label: '&#x1F4C5; Reinstated On', value: new Date().toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }) }
+    ])}
+
+        <!-- Warning Box -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="padding: 16px 36px 0 36px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.25); border-radius: 12px;">
+                        <tr>
+                            <td style="padding: 18px 20px; text-align: center;">
+                                <div style="font-size: 28px; margin-bottom: 8px;">&#x26A0;&#xFE0F;</div>
+                                <div style="font-size: 14px; font-weight: 700; color: #fbbf24; margin-bottom: 8px;">Important Warning</div>
+                                <div style="font-size: 13px; color: #94a3b8; line-height: 1.7;">
+                                    Your account was previously suspended for: <strong style="color:#f87171;">${reasonText}</strong>.<br/><br/>
+                                    Please <strong style="color:#fbbf24;">do not repeat the same mistake</strong>. If your account is suspended again for a similar reason, it will be <strong style="color:#ef4444;">permanently removed</strong> along with all your data — and this action cannot be undone.
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        ${tipBoxHTML('<strong style="color:#22d3ee;">&#x1F4A1; Tip:</strong> Make sure to follow the APKFlow community guidelines at all times. We want to keep the platform safe and reliable for everyone!')}
+        ${buttonHTML('Login to Your Account &rarr;', 'https://apkflow.vercel.app/login')}
+    `;
+
+    const mailOptions = {
+        from: {
+            name: 'APKFlow',
+            address: process.env.EMAIL_USER
+        },
+        replyTo: process.env.EMAIL_USER,
+        to: to,
+        subject: `APKFlow - Your Account Has Been Reinstated`,
+        text: `Hi ${userName}, your APKFlow account has been reinstated. Previous reason for suspension: ${reasonText}. Please do not repeat the same mistake or your account will be permanently removed. Login at https://apkflow.vercel.app/login`,
+        html: buildEmail(bodyContent, `Your APKFlow account has been reinstated`)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Unsuspension email error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// ============================
+// 8. Account Permanently Removed
+// ============================
+const sendRemovalEmail = async (to, userName, reason) => {
+    const transporter = createTransporter();
+    const reasonText = reason || 'Repeated policy violations.';
+
+    const bodyContent = `
+        ${headingHTML(
+        'Account Permanently Removed',
+        '&#x1F6D1;',
+        `Hi ${userName},`,
+        'Your APKFlow account has been <strong style="color:#ef4444;">permanently removed</strong> by our admin team. All your data, files, and download history have been deleted.'
+    )}
+        ${infoBoxHTML([
+        { label: '&#x1F6D1; Status', value: '<span style="background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">Permanently Removed</span>' },
+        { label: '&#x1F4DD; Reason', value: reasonText },
+        { label: '&#x1F4C5; Date', value: new Date().toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }) }
+    ])}
+
+        <!-- Deleted Data Summary -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="padding: 16px 36px 0 36px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.15); border-radius: 12px;">
+                        <tr>
+                            <td style="padding: 18px 20px; text-align: center;">
+                                <div style="font-size: 28px; margin-bottom: 8px;">&#x1F5D1;&#xFE0F;</div>
+                                <div style="font-size: 14px; font-weight: 700; color: #f87171; margin-bottom: 8px;">What Was Deleted</div>
+                                <div style="font-size: 13px; color: #94a3b8; line-height: 1.7;">
+                                    &#x2022; Your account and profile data<br/>
+                                    &#x2022; All uploaded APK files from cloud storage<br/>
+                                    &#x2022; All download links and analytics<br/>
+                                    &#x2022; Download history and logs
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Final Notice -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="padding: 16px 36px 0 36px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: rgba(100,116,139,0.06); border: 1px solid rgba(100,116,139,0.12); border-radius: 10px;">
+                        <tr>
+                            <td style="padding: 14px 16px; font-size: 12px; color: #94a3b8; line-height: 1.6; text-align: center;">
+                                <strong style="color:#cbd5e1;">This action is final and cannot be reversed.</strong><br/>
+                                If you believe this was a mistake, you may contact us by replying to this email. However, deleted data cannot be recovered.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    `;
+
+    const mailOptions = {
+        from: {
+            name: 'APKFlow',
+            address: process.env.EMAIL_USER
+        },
+        replyTo: process.env.EMAIL_USER,
+        to: to,
+        subject: `APKFlow - Your Account Has Been Permanently Removed`,
+        text: `Hi ${userName}, your APKFlow account has been permanently removed. Reason: ${reasonText}. All your files and data have been deleted. This action cannot be undone.`,
+        html: buildEmail(bodyContent, `Your APKFlow account has been permanently removed`)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Removal email error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     generateOTP,
     sendVerificationEmail,
@@ -505,5 +650,7 @@ module.exports = {
     sendApprovalEmail,
     sendRejectionEmail,
     sendPasswordResetEmail,
-    sendSuspensionEmail
+    sendSuspensionEmail,
+    sendUnsuspensionEmail,
+    sendRemovalEmail
 };
