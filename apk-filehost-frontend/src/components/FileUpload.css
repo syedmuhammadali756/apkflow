@@ -439,6 +439,39 @@ input:checked+.slider:before {
     border-radius: 50%;
 }
 
+/* Premium Gating Styles */
+.premium-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.premium-indicator.locked {
+    color: var(--text-tertiary);
+}
+
+.premium-badge {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--brand-primary-light);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.disabled-slider {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background-color: var(--bg-tertiary) !important;
+}
+
+.disabled-slider:before {
+    background-color: #444 !important;
+}
+
 /* Animation */
 .slide-down {
     animation: slideDown 0.3s ease-out forwards;

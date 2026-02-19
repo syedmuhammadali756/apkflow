@@ -439,7 +439,11 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
                                 <div className="toggle-label-group">
                                     <div className="toggle-icon-wrap"><Shield size={16} /></div>
                                     <div className="toggle-text">
-                                        <label className="toggle-title">Protect File</label>
+                                        <label className={`toggle-title ${userPlan === 'free' ? 'locked' : ''}`}>
+                                            {userPlan === 'free' && <Lock size={14} style={{ marginRight: '6px' }} />}
+                                            Protect File
+                                            {userPlan === 'free' && <span className="premium-badge" style={{ marginLeft: '10px' }}>Starter Only</span>}
+                                        </label>
                                         <button className="help-link" onClick={() => setShowHelp(true)}>Why it's important?</button>
                                     </div>
                                 </div>
@@ -448,8 +452,9 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
                                         type="checkbox"
                                         checked={isDomainLocked}
                                         onChange={(e) => setIsDomainLocked(e.target.checked)}
+                                        disabled={userPlan === 'free'}
                                     />
-                                    <span className="slider round"></span>
+                                    <span className={`slider round ${userPlan === 'free' ? 'disabled-slider' : ''}`}></span>
                                 </label>
                             </div>
 

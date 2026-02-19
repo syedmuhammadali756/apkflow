@@ -95,24 +95,13 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         const brandName = req.body.brandName || '';
         const allowedDomain = req.body.allowedDomain || '';
 
-        const newFile = new File({
-            fileId,
-            userId: req.userId,
-            originalName,
-            fileSize,
-            mimeType: mimetype,
-            storageKey,
-            storageType,
-            downloadLink: `/d/${fileId}`,
-            customName,
-            brandName,
-            allowedDomain,
-            metadata: {
-                fileExtension: '.apk',
-                uploadIP: req.ip,
-                userAgent: req.get('user-agent')
-            }
-        });
+        // Check if plan allows domain protection (allowedDomain)
+        if (allowedDomain && !planLimits.protectedLinks) {
+            // Silently ignore or clear it for free users to prevent bypass
+            newFile.allowedDomain = '';
+        } else {
+            newFile.allowedDomain = allowedDomain;
+        }
 
         await newFile.save();
 

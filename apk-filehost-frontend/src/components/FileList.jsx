@@ -227,7 +227,10 @@ const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
                                     </div>
                                     <div className="file-edit-group">
                                         <div className="label-with-badge">
-                                            <label>Domain Lock</label>
+                                            <label className={userPlan === 'free' ? 'premium-locked-label' : ''}>
+                                                {userPlan === 'free' && <Lock size={12} style={{ marginRight: '6px' }} />}
+                                                Domain Lock
+                                            </label>
                                             {userPlan === 'free' && (
                                                 <span className="locked-badge">Starter Only</span>
                                             )}
