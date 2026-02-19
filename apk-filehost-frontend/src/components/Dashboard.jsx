@@ -153,7 +153,11 @@ const Dashboard = ({ activePage = 'overview' }) => {
     };
 
     const storagePercentage = Math.min((stats.storageUsed / stats.storageLimit) * 100, 100);
-    const uploadsRemaining = Math.max(0, 3 - stats.totalFiles);
+    const planLimits = { free: 1, starter: 3, pro: 999 };
+    const maxFiles = planLimits[user?.plan || 'free'] || 1;
+    const uploadsRemaining = Math.max(0, maxFiles - stats.totalFiles);
+    const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro' };
+    const planColors = { free: '#94a3b8', starter: '#a78bfa', pro: '#fbbf24' };
 
     const handleLogout = () => { logout(); navigate('/'); };
 
@@ -198,6 +202,15 @@ const Dashboard = ({ activePage = 'overview' }) => {
                         </div>
                     </div>
 
+                    <div className="sidebar-plan-widget">
+                        <div className="plan-badge-sm" style={{ borderColor: planColors[user?.plan || 'free'], color: planColors[user?.plan || 'free'] }}>
+                            {planLabels[user?.plan || 'free']} Plan
+                        </div>
+                        {user?.plan === 'free' && (
+                            <Link to="/#pricing" className="upgrade-link">Upgrade to Starter</Link>
+                        )}
+                    </div>
+
                     <button onClick={handleLogout} className="sidebar-link logout-link">
                         <LogOut size={20} />
                         <span>Logout</span>
@@ -220,6 +233,9 @@ const Dashboard = ({ activePage = 'overview' }) => {
                     </div>
                     <div className="topbar-actions">
                         <div className="topbar-user">
+                            <span className="topbar-plan-badge" style={{ background: `${planColors[user?.plan || 'free']}15`, color: planColors[user?.plan || 'free'] }}>
+                                {planLabels[user?.plan || 'free']}
+                            </span>
                             <div className="topbar-avatar">
                                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
@@ -240,8 +256,8 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                     </div>
                                     <div className="dash-stat-info">
                                         <span className="dash-stat-label">Total Files</span>
-                                        <span className="dash-stat-value">{stats.totalFiles} / 3</span>
-                                        <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>Free Plan Limit</span>
+                                        <span className="dash-stat-value">{stats.totalFiles} / {maxFiles === 999 ? '∞' : maxFiles}</span>
+                                        <span style={{ fontSize: '11px', opacity: 0.7, display: 'block', marginTop: '4px' }}>{planLabels[user?.plan || 'free']} Plan Limit</span>
                                     </div>
                                 </div>
 
@@ -383,7 +399,11 @@ const Dashboard = ({ activePage = 'overview' }) => {
 
                             {/* Quick Upload */}
                             {uploadsRemaining > 0 ? (
-                                <FileUpload onUploadSuccess={handleUploadSuccess} fileCount={stats.totalFiles} />
+                                <FileUpload
+                                    onUploadSuccess={handleUploadSuccess}
+                                    fileCount={stats.totalFiles}
+                                    userPlan={user?.plan || 'free'}
+                                />
                             ) : (
                                 <div className="upload-limit-reached glass-card">
                                     <div className="limit-icon-wrap">
@@ -395,7 +415,12 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                     </div>
                                     <div className="limit-text-content">
                                         <h3>Upload Limit Reached</h3>
-                                        <p>You've used all <strong>3 free uploads</strong>. Delete a file to upload a new one.</p>
+                                        <p>You've used all <strong>{maxFiles === 999 ? '∞' : maxFiles} {planLabels[user?.plan || 'free']} uploads</strong>. Please delete a file or upgrade your plan to upload more.</p>
+                                        {user?.plan === 'free' && (
+                                            <Link to="/#pricing" className="btn btn-primary btn-sm" style={{ marginTop: '12px' }}>
+                                                Upgrade to Starter
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -407,7 +432,12 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                     <span>Loading files...</span>
                                 </div>
                             ) : (
-                                <FileList files={files} onDelete={handleDelete} onRename={fetchFiles} />
+                                <FileList
+                                    files={files}
+                                    onDelete={handleDelete}
+                                    onRename={fetchFiles}
+                                    userPlan={user?.plan || 'free'}
+                                />
                             )}
                         </>
                     )}

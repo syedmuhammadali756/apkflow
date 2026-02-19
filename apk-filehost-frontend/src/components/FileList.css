@@ -775,3 +775,52 @@
         justify-content: center;
     }
 }
+
+/* Gated Feature Styles */
+.label-with-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.locked-badge {
+    font-size: 8px;
+    background: rgba(167, 139, 250, 0.15);
+    color: #a78bfa;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.domain-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.domain-input-wrapper input {
+    flex: 1;
+}
+
+.domain-input-wrapper input.disabled-input {
+    background: rgba(255, 255, 255, 0.02) !important;
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+.unlock-inline-link {
+    position: absolute;
+    right: 12px;
+    font-size: 11px;
+    color: var(--brand-primary-light);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.unlock-inline-link:hover {
+    text-decoration: underline;
+}

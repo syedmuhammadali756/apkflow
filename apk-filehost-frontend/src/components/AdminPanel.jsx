@@ -29,10 +29,12 @@ const AdminPanel = () => {
     const [targetUserId, setTargetUserId] = useState(null);
     const [targetUserName, setTargetUserName] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
+    const [planFilter, setPlanFilter] = useState('all');
     const [showPassword, setShowPassword] = useState(false);
     const [copied, setCopied] = useState('');
     const [pendingUsers, setPendingUsers] = useState([]);
     const [toasts, setToasts] = useState([]);
+    const [approvePlan, setApprovePlan] = useState({});
 
     const getToken = () => sessionStorage.getItem('admin_token');
 
@@ -109,12 +111,30 @@ const AdminPanel = () => {
     const handleApprove = async (userId) => {
         setActionLoading(true);
         try {
-            const res = await adminApi.post(`/api/admin/approve/${userId}`);
+            const plan = approvePlan[userId] || 'free';
+            const res = await adminApi.post(`/api/admin/approve/${userId}`, { plan });
             showToast(res.data.message || 'User approved successfully');
             fetchPendingUsers();
             fetchUsers();
         } catch (err) {
             showToast(err.response?.data?.message || 'Failed to approve', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleChangePlan = async (userId, newPlan) => {
+        setActionLoading(true);
+        try {
+            const res = await adminApi.post(`/api/admin/users/${userId}/change-plan`, { plan: newPlan });
+            showToast(res.data.message || 'Plan changed successfully');
+            fetchUsers();
+            // Refresh selected user details if open
+            if (selectedUser && selectedUser.id === userId) {
+                viewUser(userId);
+            }
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Failed to change plan', 'error');
         } finally {
             setActionLoading(false);
         }
@@ -225,8 +245,13 @@ const AdminPanel = () => {
         if (activeFilter === 'suspended') return matchesSearch && u.isSuspended;
         if (activeFilter === 'active') return matchesSearch && !u.isSuspended;
         if (activeFilter === 'pending') return matchesSearch && (u.accountStatus === 'pending_approval' || u.accountStatus === 'pending_verification');
+        // Plan filters
+        if (planFilter !== 'all') return matchesSearch && (u.plan || 'free') === planFilter;
         return matchesSearch;
     });
+
+    const planColors = { free: '#64748b', starter: '#a78bfa', pro: '#fbbf24' };
+    const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro' };
 
     const copyToClipboard = (text, field) => {
         navigator.clipboard.writeText(text);
@@ -410,9 +435,24 @@ const AdminPanel = () => {
                             <button
                                 key={f.id}
                                 className={`admin-filter-tab ${activeFilter === f.id ? 'active' : ''}`}
-                                onClick={() => setActiveFilter(f.id)}
+                                onClick={() => { setActiveFilter(f.id); setPlanFilter('all'); }}
                             >
                                 {f.label} <span className="admin-filter-count">{f.count}</span>
+                            </button>
+                        ))}
+                        <span style={{ width: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                        {[
+                            { id: 'all', label: '📋 All Plans' },
+                            { id: 'free', label: '🆓 Free', count: users.filter(u => (u.plan || 'free') === 'free').length },
+                            { id: 'starter', label: '⭐ Starter', count: users.filter(u => u.plan === 'starter').length },
+                            { id: 'pro', label: '🚀 Pro', count: users.filter(u => u.plan === 'pro').length }
+                        ].map(f => (
+                            <button
+                                key={`plan-${f.id}`}
+                                className={`admin-filter-tab ${planFilter === f.id ? 'active' : ''}`}
+                                onClick={() => { setPlanFilter(f.id); setActiveFilter('all'); }}
+                            >
+                                {f.label} {f.count !== undefined && <span className="admin-filter-count">{f.count}</span>}
                             </button>
                         ))}
                     </div>
@@ -438,6 +478,15 @@ const AdminPanel = () => {
                                         </span>
                                     </div>
                                     <div className="admin-pending-actions">
+                                        <select
+                                            className="admin-plan-select"
+                                            value={approvePlan[u.id] || 'free'}
+                                            onChange={(e) => setApprovePlan(prev => ({ ...prev, [u.id]: e.target.value }))}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <option value="free">🆓 Free Plan</option>
+                                            <option value="starter">⭐ Starter Plan</option>
+                                        </select>
                                         <button
                                             className="admin-btn admin-btn-success admin-btn-sm"
                                             onClick={() => handleApprove(u.id)}
@@ -477,6 +526,9 @@ const AdminPanel = () => {
                                     {user.accountStatus === 'pending_approval' && <span className="badge-pending">Pending</span>}
                                     {user.accountStatus === 'pending_verification' && <span className="badge-unverified">Unverified</span>}
                                     {user.accountStatus === 'rejected' && <span className="badge-rejected">Rejected</span>}
+                                    <span className="badge-plan" style={{ background: `${planColors[user.plan || 'free']}22`, color: planColors[user.plan || 'free'], borderColor: `${planColors[user.plan || 'free']}44` }}>
+                                        {planLabels[user.plan || 'free']}
+                                    </span>
                                 </div>
                                 <div className="admin-user-email">{user.email}</div>
                             </div>
@@ -530,6 +582,9 @@ const AdminPanel = () => {
                                         )}
                                         <span className={`badge-status-${selectedUser.accountStatus}`}>
                                             {selectedUser.accountStatus}
+                                        </span>
+                                        <span className="badge-plan-lg" style={{ background: `${planColors[selectedUser.plan || 'free']}22`, color: planColors[selectedUser.plan || 'free'], borderColor: `${planColors[selectedUser.plan || 'free']}44` }}>
+                                            {planLabels[selectedUser.plan || 'free']} Plan
                                         </span>
                                     </div>
                                     {selectedUser.isSuspended && selectedUser.suspendReason && (
@@ -621,6 +676,20 @@ const AdminPanel = () => {
 
                             {/* Actions */}
                             <div className="admin-actions">
+                                {/* Change Plan */}
+                                <div className="admin-change-plan-row">
+                                    <label>Change Plan:</label>
+                                    <select
+                                        className="admin-plan-select"
+                                        value={selectedUser.plan || 'free'}
+                                        onChange={(e) => handleChangePlan(selectedUser.id, e.target.value)}
+                                        disabled={actionLoading}
+                                    >
+                                        <option value="free">🆓 Free</option>
+                                        <option value="starter">⭐ Starter</option>
+                                        <option value="pro">🚀 Pro (Coming Soon)</option>
+                                    </select>
+                                </div>
                                 <div className="admin-actions-row">
                                     {selectedUser.isSuspended ? (
                                         <button

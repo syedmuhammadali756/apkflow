@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Upload, Download, Shield, Zap, Cloud, BarChart, ArrowRight, Check, Users, Package, Star, Rocket, Cpu, QrCode, ChevronDown } from './Icons';
+import { Upload, Download, Shield, Zap, Cloud, BarChart, ArrowRight, Check, X, Users, Package, Star, Rocket, Cpu, QrCode, ChevronDown } from './Icons';
 import './LandingPage.css';
 
 // Animated counter hook
@@ -633,36 +633,91 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Pricing / Free Tier */}
+            {/* Pricing / Plans */}
             <section className="section pricing-section" id="pricing">
                 <div className="container">
                     <div className="section-header">
                         <div className="section-badge">Pricing</div>
-                        <h2>Simple & <span className="gradient-text">Free</span> Pricing</h2>
-                        <p>Everything you need, completely free. No hidden charges, ever.</p>
+                        <h2>Choose Your <span className="gradient-text">Plan</span></h2>
+                        <p>Start free, upgrade when you need more power.</p>
                     </div>
 
-                    <div className="pricing-card glass-card">
-                        <div className="pricing-badge">Most Popular</div>
-                        <h3>Free Forever</h3>
-                        <div className="pricing-amount">
-                            <span className="price">$0</span>
-                            <span className="period">/month</span>
+                    <div className="pricing-grid">
+                        {/* Free Plan */}
+                        <div className="pricing-card glass-card pricing-free">
+                            <h3>Free</h3>
+                            <div className="pricing-amount">
+                                <span className="price">₨0</span>
+                                <span className="period">/month</span>
+                            </div>
+                            <ul className="pricing-features">
+                                <li><Check size={16} /> 1 File Upload</li>
+                                <li><Check size={16} /> 5 GB Storage</li>
+                                <li><Check size={16} /> Unlimited Downloads</li>
+                                <li><Check size={16} /> Instant Download Links</li>
+                                <li><Check size={16} /> Download Analytics</li>
+                                <li><Check size={16} /> QR Code per File</li>
+                                <li><Check size={16} /> AI Smart Rename</li>
+                                <li className="feature-excluded"><X size={16} /> Protected Download Links</li>
+                            </ul>
+                            <Link to="/register" className="btn btn-secondary btn-lg" style={{ width: '100%' }}>
+                                Start Free
+                                <ArrowRight size={18} />
+                            </Link>
                         </div>
-                        <ul className="pricing-features">
-                            <li><Check size={16} /> 5 GB Storage</li>
-                            <li><Check size={16} /> Unlimited Downloads</li>
-                            <li><Check size={16} /> Instant Download Links</li>
-                            <li><Check size={16} /> Download Analytics</li>
-                            <li><Check size={16} /> QR Code per File</li>
-                            <li><Check size={16} /> AI Smart Rename</li>
-                            <li><Check size={16} /> No Ads on Download Pages</li>
-                            <li><Check size={16} /> Links Never Expire</li>
-                        </ul>
-                        <Link to="/register" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                            Start Free
-                            <ArrowRight size={18} />
-                        </Link>
+
+                        {/* Starter Plan */}
+                        <div className="pricing-card glass-card pricing-starter">
+                            <div className="pricing-badge">Most Popular</div>
+                            <div className="pricing-limited-badge">🔥 Limited Time Offer</div>
+                            <h3>Starter</h3>
+                            <div className="pricing-amount">
+                                <span className="price">₨1,000</span>
+                                <span className="period">/month</span>
+                            </div>
+                            <ul className="pricing-features">
+                                <li><Check size={16} /> 3 File Uploads</li>
+                                <li><Check size={16} /> 5 GB Storage</li>
+                                <li><Check size={16} /> Unlimited Downloads</li>
+                                <li><Check size={16} /> Instant Download Links</li>
+                                <li><Check size={16} /> Download Analytics</li>
+                                <li><Check size={16} /> QR Code per File</li>
+                                <li><Check size={16} /> AI Smart Rename</li>
+                                <li><Check size={16} /> Protected Download Links</li>
+                                <li><Check size={16} /> No Ads on Download Pages</li>
+                                <li><Check size={16} /> Links Never Expire</li>
+                            </ul>
+                            <Link to="/register" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
+                                Get Starter
+                                <ArrowRight size={18} />
+                            </Link>
+                        </div>
+
+                        {/* Pro Plan (Blurred / Coming Soon) */}
+                        <div className="pricing-card glass-card pricing-pro">
+                            <div className="pricing-coming-soon-overlay">
+                                <span className="coming-soon-badge">🚀 Coming Soon</span>
+                            </div>
+                            <div className="pricing-pro-blur">
+                                <h3>Pro</h3>
+                                <div className="pricing-amount">
+                                    <span className="price">₨???</span>
+                                    <span className="period">/month</span>
+                                </div>
+                                <ul className="pricing-features">
+                                    <li><Check size={16} /> Unlimited File Uploads</li>
+                                    <li><Check size={16} /> 10 GB Storage</li>
+                                    <li><Check size={16} /> Unlimited Downloads</li>
+                                    <li><Check size={16} /> All Starter Features</li>
+                                    <li><Check size={16} /> Priority Support</li>
+                                    <li><Check size={16} /> Custom Branding</li>
+                                    <li><Check size={16} /> API Access</li>
+                                </ul>
+                                <button className="btn btn-secondary btn-lg" style={{ width: '100%' }} disabled>
+                                    Coming Soon
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

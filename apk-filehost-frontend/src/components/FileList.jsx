@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Package, Download, Clock, Copy, Check, Trash, Edit, X, Globe, Shield, BarChart, Eye, Search, Grid as GridIcon, List as ListIcon, Folder } from './Icons';
 import './FileList.css';
 
-const FileList = ({ files, onDelete, onRename }) => {
+const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
     const { API_URL } = useAuth();
     const [copiedId, setCopiedId] = useState(null);
     const [renamingFile, setRenamingFile] = useState(null);
@@ -226,14 +226,26 @@ const FileList = ({ files, onDelete, onRename }) => {
                                         />
                                     </div>
                                     <div className="file-edit-group">
-                                        <label>Domain Lock</label>
-                                        <input
-                                            type="text"
-                                            value={newDomain}
-                                            onChange={(e) => setNewDomain(e.target.value)}
-                                            onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
-                                            placeholder="example.com (optional)"
-                                        />
+                                        <div className="label-with-badge">
+                                            <label>Domain Lock</label>
+                                            {userPlan === 'free' && (
+                                                <span className="locked-badge">Starter Only</span>
+                                            )}
+                                        </div>
+                                        <div className="domain-input-wrapper">
+                                            <input
+                                                type="text"
+                                                value={newDomain}
+                                                onChange={(e) => setNewDomain(e.target.value)}
+                                                onKeyDown={(e) => handleRenameKeyDown(e, file.fileId)}
+                                                placeholder={userPlan === 'free' ? "Upgrade to unlock" : "example.com (optional)"}
+                                                disabled={userPlan === 'free'}
+                                                className={userPlan === 'free' ? 'disabled-input' : ''}
+                                            />
+                                            {userPlan === 'free' && (
+                                                <Link to="/#pricing" className="unlock-inline-link">Upgrade</Link>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="file-edit-actions">
                                         <button className="btn btn-sm btn-primary" onClick={() => handleRename(file.fileId)}>
