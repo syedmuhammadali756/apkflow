@@ -478,7 +478,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                 <Star size={28} />
                             </div>
                             <h2>Upgrade to Starter</h2>
-                            <p className="upgrade-popup-price">Rs 1,000<span>/month</span></p>
+                            <p className="upgrade-popup-price">Rs 1,000</p>
                         </div>
                         <div className="upgrade-popup-features">
                             <div className="upgrade-feature-item"><Package size={14} /> Upload up to 3 files</div>
@@ -493,7 +493,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
                                 <WhatsAppIcon size={18} />
                                 <span>WhatsApp</span>
                             </a>
-                            <a href="mailto:syedmuhammadali756@gmail.com?subject=APKFlow%20Starter%20Plan%20Upgrade" className="upgrade-contact-btn email-btn">
+                            <a href="mailto:syedmuhammadalibukhari756@gmail.com?subject=APKFlow%20Starter%20Plan%20Upgrade" className="upgrade-contact-btn email-btn">
                                 <Mail size={18} />
                                 <span>Email</span>
                             </a>

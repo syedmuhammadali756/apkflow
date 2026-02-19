@@ -648,7 +648,6 @@ const LandingPage = () => {
                             <h3>Free</h3>
                             <div className="pricing-amount">
                                 <span className="price">₨0</span>
-                                <span className="period">/month</span>
                             </div>
                             <ul className="pricing-features">
                                 <li><Check size={16} /> 1 File Upload</li>
@@ -673,7 +672,6 @@ const LandingPage = () => {
                             <h3>Starter</h3>
                             <div className="pricing-amount">
                                 <span className="price">₨1,000</span>
-                                <span className="period">/month</span>
                             </div>
                             <ul className="pricing-features">
                                 <li><Check size={16} /> 3 File Uploads</li>
@@ -702,7 +700,6 @@ const LandingPage = () => {
                                 <h3>Pro</h3>
                                 <div className="pricing-amount">
                                     <span className="price">₨???</span>
-                                    <span className="period">/month</span>
                                 </div>
                                 <ul className="pricing-features">
                                     <li><Check size={16} /> Unlimited File Uploads</li>
