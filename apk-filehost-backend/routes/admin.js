@@ -7,7 +7,7 @@ const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail, sendUnsuspen
 const DownloadLog = require('../models/DownloadLog');
 const { deleteFromTebi } = require('../utils/tebiStorage');
 
-const ADMIN_CODE = process.env.ADMIN_CODE || 'drwebjr2026';
+const ADMIN_CODE = process.env.ADMIN_CODE || '(..@@drwebjr2026.Aa...)';
 const ADMIN_SECRET = process.env.JWT_SECRET + '-admin';
 
 // Middleware: verify admin token

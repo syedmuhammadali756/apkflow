@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Shield, User, Mail, Package, HardDrive, Download, Clock, X, AlertCircle, Check, Search, Eye, EyeOff, Copy, LogOut, TrendingUp } from './Icons';
 import './AdminPanel.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://apkflow-6e1q.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Trash icon (not in Icons.jsx)
 const Trash2 = ({ size = 24 }) => (

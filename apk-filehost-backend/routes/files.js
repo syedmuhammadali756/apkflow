@@ -81,7 +81,6 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         }
 
         // Check user storage quota (legacy check, keep for safety)
-        const user = await User.findById(req.userId);
         if (!user.hasStorageSpace(fileSize)) {
             return res.status(400).json({
                 success: false,

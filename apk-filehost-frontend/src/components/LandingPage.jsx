@@ -669,7 +669,7 @@ const LandingPage = () => {
                         {/* Starter Plan */}
                         <div className="pricing-card glass-card pricing-starter">
                             <div className="pricing-badge">Most Popular</div>
-                            <div className="pricing-limited-badge">🔥 Limited Time Offer</div>
+                            <div className="pricing-limited-badge"><Zap size={14} /> Limited Time Offer</div>
                             <h3>Starter</h3>
                             <div className="pricing-amount">
                                 <span className="price">₨1,000</span>
@@ -696,7 +696,7 @@ const LandingPage = () => {
                         {/* Pro Plan (Blurred / Coming Soon) */}
                         <div className="pricing-card glass-card pricing-pro">
                             <div className="pricing-coming-soon-overlay">
-                                <span className="coming-soon-badge">🚀 Coming Soon</span>
+                                <span className="coming-soon-badge"><Rocket size={14} /> Coming Soon</span>
                             </div>
                             <div className="pricing-pro-blur">
                                 <h3>Pro</h3>
