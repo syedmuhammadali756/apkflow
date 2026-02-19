@@ -102,6 +102,7 @@ router.get('/users/:id', adminAuth, async (req, res) => {
                 suspendedAt: user.suspendedAt,
                 suspendReason: user.suspendReason || '',
                 accountStatus: user.accountStatus || 'approved',
+                plan: user.plan || 'free',
                 isEmailVerified: user.isEmailVerified || false,
                 registrationIP: user.registrationIP || '',
                 deviceFingerprint: user.deviceFingerprint || ''

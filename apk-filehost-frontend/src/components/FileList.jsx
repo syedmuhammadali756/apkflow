@@ -392,7 +392,7 @@ const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
                                     <div className="modal-analytics-wrapper">
                                         {fileStats.analytics.countryStats?.length > 0 && (
                                             <div className="file-analytics-section">
-                                                <h4>📍 Geo-Distribution</h4>
+                                                <h4><Globe size={16} /> Geo-Distribution</h4>
                                                 <div className="analytics-list">
                                                     {fileStats.analytics.countryStats.map((c, i) => (
                                                         <div key={i} className="analytics-row">
@@ -409,7 +409,7 @@ const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
 
                                         {fileStats.analytics.recentDownloads?.length > 0 && (
                                             <div className="file-analytics-section">
-                                                <h4>📥 Recent Activity</h4>
+                                                <h4><Download size={16} /> Recent Activity</h4>
                                                 <div className="analytics-list recent">
                                                     {fileStats.analytics.recentDownloads.slice(0, 5).map((d, i) => (
                                                         <div key={i} className="analytics-row">

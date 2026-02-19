@@ -1143,3 +1143,229 @@
 .limit-text-content strong {
     color: #ef4444;
 }
+
+/* ========== Upgrade Popup ========== */
+.upgrade-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.upgrade-popup {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.upgrade-popup-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upgrade-popup-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.upgrade-popup-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.upgrade-popup-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: white;
+    box-shadow: 0 8px 16px rgba(124, 58, 237, 0.3);
+}
+
+.upgrade-popup-header h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.upgrade-popup-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.upgrade-popup-price span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.upgrade-popup-features {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.upgrade-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.upgrade-feature-item svg {
+    color: #7c3aed;
+}
+
+.upgrade-popup-divider {
+    height: 1px;
+    background: var(--border-primary);
+    margin-bottom: 20px;
+}
+
+.upgrade-popup-contact-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.upgrade-popup-contacts {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 0.8fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.upgrade-contact-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 10px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.whatsapp-btn {
+    background: rgba(37, 211, 102, 0.1);
+    color: #25d366;
+}
+
+.whatsapp-btn:hover {
+    background: #25d366;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.email-btn {
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
+}
+
+.email-btn:hover {
+    background: #7c3aed;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.phone-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.phone-btn:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.upgrade-popup-info {
+    text-align: center;
+    border-top: 1px dashed var(--border-primary);
+    padding-top: 15px;
+}
+
+.upgrade-popup-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+    .upgrade-popup {
+        padding: 20px;
+    }
+
+    .upgrade-popup-contacts {
+        grid-template-columns: 1fr;
+    }
+
+    .upgrade-contact-btn {
+        flex-direction: row;
+        justify-content: center;
+        font-size: 14px;
+    }
+}

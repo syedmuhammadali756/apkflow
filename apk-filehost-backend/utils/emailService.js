@@ -658,19 +658,24 @@ const sendPlanUpgradeEmail = async (to, userName, newPlan, oldPlan) => {
     const transporter = createTransporter();
 
     const planLabels = {
-        free: { name: 'Free', color: '#64748b', maxFiles: '1 file', protectedLinks: 'Not included' },
-        starter: { name: 'Starter', color: '#7c3aed', maxFiles: '3 files', protectedLinks: 'Included ✓' },
-        pro: { name: 'Pro', color: '#f59e0b', maxFiles: 'Unlimited', protectedLinks: 'Included ✓' }
+        free: { name: 'Free', color: '#64748b', maxFiles: '1 file', protectedLinks: 'Not included', weight: 1 },
+        starter: { name: 'Starter', color: '#7c3aed', maxFiles: '3 files', protectedLinks: 'Included ✓', weight: 2 },
+        pro: { name: 'Pro', color: '#f59e0b', maxFiles: 'Unlimited', protectedLinks: 'Included ✓', weight: 3 }
     };
     const p = planLabels[newPlan] || planLabels.free;
     const oldP = planLabels[oldPlan] || planLabels.free;
 
+    const isUpgrade = p.weight > oldP.weight;
+    const actionLabel = isUpgrade ? 'Upgraded' : 'Updated';
+    const actionIcon = isUpgrade ? '&#x1F680;' : '&#x2705;';
+    const greeting = isUpgrade ? 'Plan Upgrade!' : 'Plan Update';
+
     const bodyContent = `
         ${headingHTML(
         'Plan Updated',
-        '&#x1F680;',
-        `Plan Upgrade, ${userName}!`,
-        `Your APKFlow plan has been upgraded from <strong style="color:${oldP.color};">${oldP.name}</strong> to <strong style="color:${p.color};">${p.name}</strong>!`
+        actionIcon,
+        `${greeting}, ${userName}!`,
+        `Your APKFlow plan has been ${actionLabel.toLowerCase()} from <strong style="color:${oldP.color};">${oldP.name}</strong> to <strong style="color:${p.color};">${p.name}</strong>.`
     )}
         ${infoBoxHTML([
         { label: '&#x1F3F7; New Plan', value: `<span style="background:rgba(124,58,237,0.12); color:${p.color}; border:1px solid rgba(124,58,237,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">${p.name}</span>` },
@@ -678,7 +683,7 @@ const sendPlanUpgradeEmail = async (to, userName, newPlan, oldPlan) => {
         { label: '&#x1F512; Protected Links', value: p.protectedLinks },
         { label: '&#x1F4E6; Storage', value: '5 GB' }
     ])}
-        ${tipBoxHTML('Your new plan features are now active. Login to start using them immediately!')}
+        ${tipBoxHTML(`Your new ${p.name} plan features are now active. Login to start using them immediately!`)}
         ${buttonHTML('Login to Dashboard &rarr;', 'https://apkflow.vercel.app/login')}
     `;
 
@@ -689,16 +694,16 @@ const sendPlanUpgradeEmail = async (to, userName, newPlan, oldPlan) => {
         },
         replyTo: process.env.EMAIL_USER,
         to: to,
-        subject: `Your APKFlow Plan Has Been Upgraded to ${p.name}! 🚀`,
-        text: `Great news, ${userName}! Your APKFlow plan has been upgraded from ${oldP.name} to ${p.name}. Login at https://apkflow.vercel.app/login`,
-        html: buildEmail(bodyContent, `Your plan has been upgraded to ${p.name}!`)
+        subject: `Your APKFlow Plan Has Been ${actionLabel} to ${p.name}!`,
+        text: `Hi ${userName}, your APKFlow plan has been ${actionLabel.toLowerCase()} from ${oldP.name} to ${p.name}. Login at https://apkflow.vercel.app/login`,
+        html: buildEmail(bodyContent, `Your plan has been ${actionLabel.toLowerCase()} to ${p.name}!`)
     };
 
     try {
         await transporter.sendMail(mailOptions);
         return { success: true };
     } catch (error) {
-        console.error('Plan upgrade email error:', error);
+        console.error('Plan update email error:', error);
         return { success: false, error: error.message };
     }
 };

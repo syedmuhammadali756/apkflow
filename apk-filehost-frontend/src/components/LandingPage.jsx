@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Upload, Download, Shield, Zap, Cloud, BarChart, ArrowRight, Check, X, Users, Package, Star, Rocket, Cpu, QrCode, ChevronDown } from './Icons';
+import { Upload, Download, Shield, Zap, Cloud, BarChart, ArrowRight, Check, X, Users, Package, Star, Rocket, Cpu, QrCode, ChevronDown, Lock } from './Icons';
 import './LandingPage.css';
 
 // Animated counter hook
@@ -291,7 +291,7 @@ const LandingPage = () => {
                                     </div>
                                     <div className="ai-arrow">→</div>
                                     <div className="ai-after">
-                                        <span className="ai-label">AI Suggestion ✨</span>
+                                        <span className="ai-label">AI Suggestion</span>
                                         <code className="ai-suggested">MyApp v2.3.1</code>
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@ const LandingPage = () => {
                                         <span>Analyzing filename...</span>
                                     </div>
                                     <div className="ai-demo-result">
-                                        <span className="ai-demo-label">Suggested name ✨</span>
+                                        <span className="ai-demo-label">Suggested name</span>
                                         <div className="ai-demo-suggestion">APKFlow v1.0.0</div>
                                         <div className="ai-demo-actions">
                                             <button className="ai-accept-btn">✓ Accept</button>
@@ -372,7 +372,7 @@ const LandingPage = () => {
                                             <span className="spot-file-name">MyApp v2.3.1.apk</span>
                                             <span className="spot-file-meta">12.4 MB · 3 downloads</span>
                                         </div>
-                                        <div className="spot-lock-icon">🔒</div>
+                                        <div className="spot-lock-icon"><Lock size={16} /></div>
                                     </div>
                                     <div className="spot-password-section">
                                         <div className="spot-pass-label">Enter password to download</div>

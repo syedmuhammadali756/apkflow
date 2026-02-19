@@ -442,10 +442,10 @@ const AdminPanel = () => {
                         ))}
                         <span style={{ width: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
                         {[
-                            { id: 'all', label: '📋 All Plans' },
-                            { id: 'free', label: '🆓 Free', count: users.filter(u => (u.plan || 'free') === 'free').length },
-                            { id: 'starter', label: '⭐ Starter', count: users.filter(u => u.plan === 'starter').length },
-                            { id: 'pro', label: '🚀 Pro', count: users.filter(u => u.plan === 'pro').length }
+                            { id: 'all', label: 'All Plans' },
+                            { id: 'free', label: '● Free', count: users.filter(u => (u.plan || 'free') === 'free').length },
+                            { id: 'starter', label: '★ Starter', count: users.filter(u => u.plan === 'starter').length },
+                            { id: 'pro', label: '◆ Pro', count: users.filter(u => u.plan === 'pro').length }
                         ].map(f => (
                             <button
                                 key={`plan-${f.id}`}
@@ -685,9 +685,9 @@ const AdminPanel = () => {
                                         onChange={(e) => handleChangePlan(selectedUser.id, e.target.value)}
                                         disabled={actionLoading}
                                     >
-                                        <option value="free">🆓 Free</option>
-                                        <option value="starter">⭐ Starter</option>
-                                        <option value="pro">🚀 Pro (Coming Soon)</option>
+                                        <option value="free">● Free</option>
+                                        <option value="starter">★ Starter</option>
+                                        <option value="pro">◆ Pro (Coming Soon)</option>
                                     </select>
                                 </div>
                                 <div className="admin-actions-row">
@@ -780,7 +780,7 @@ const AdminPanel = () => {
                             <li>All download logs and analytics</li>
                         </ul>
                         <div className="admin-remove-warning">
-                            ⚠️ This action is <strong>irreversible</strong>. Type <code>DELETE</code> to confirm.
+                            This action is <strong>irreversible</strong>. Type <code>DELETE</code> to confirm.
                         </div>
                         <input
                             type="text"

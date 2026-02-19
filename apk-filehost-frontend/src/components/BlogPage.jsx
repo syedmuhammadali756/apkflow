@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Clock, ArrowRight, Search, X } from './Icons';
+import { BookOpen, Clock, ArrowRight, Search, X, Edit } from './Icons';
 import './BlogPage.css';
 
 const blogPosts = [
@@ -176,7 +176,7 @@ const BlogPage = () => {
                                 </div>
                             </div>
                             <div className="blog-featured-visual">
-                                <div className="blog-featured-icon">📝</div>
+                                <div className="blog-featured-icon"><Edit size={32} /></div>
                             </div>
                         </article>
                     )}

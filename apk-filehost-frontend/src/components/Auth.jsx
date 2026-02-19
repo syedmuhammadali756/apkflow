@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BrandLogo, Mail, Lock, User, Eye, EyeOff, ArrowRight, Shield, Zap, Cloud, Check, Clock } from './Icons';
+import { BrandLogo, Mail, Lock, User, Eye, EyeOff, ArrowRight, Shield, Zap, Cloud, Check, Clock, Info } from './Icons';
 import './Auth.css';
 
 // Simple browser fingerprint generator
@@ -295,7 +295,7 @@ const Auth = ({ mode = 'login' }) => {
                             </div>
                             <h1>Enter Reset Code</h1>
                             <p>We've sent a 6-digit code to <strong>{resetEmail}</strong></p>
-                            <p className="auth-spam-tip">💡 Check your <strong>Spam</strong> or <strong>Junk</strong> folder if you can't find it.</p>
+                            <p className="auth-spam-tip"><Info size={14} /> Check your <strong>Spam</strong> or <strong>Junk</strong> folder if you can't find it.</p>
                         </div>
                         <form onSubmit={handleForgotVerifyCode} className="auth-form">
                             <div className="input-group">
@@ -424,7 +424,7 @@ const Auth = ({ mode = 'login' }) => {
                             <div className="auth-step-icon auth-step-success">
                                 <Check size={32} />
                             </div>
-                            <h1>Password Reset! 🎉</h1>
+                            <h1>Password Reset!</h1>
                             <p>Your password has been changed successfully. You can now login with your new password.</p>
                         </div>
                         <button onClick={() => { setForgotStep(null); setError(''); setIsLogin(true); navigate('/login', { replace: true }); }} className="btn btn-primary btn-lg auth-submit">
@@ -459,7 +459,7 @@ const Auth = ({ mode = 'login' }) => {
                             </div>
                             <h1>Verify Your Email</h1>
                             <p>We've sent a 6-digit code to <strong>{formData.email}</strong></p>
-                            <p className="auth-spam-tip">💡 Can't find it? Check your <strong>Spam</strong> or <strong>Junk</strong> folder.</p>
+                            <p className="auth-spam-tip"><Info size={14} /> Can't find it? Check your <strong>Spam</strong> or <strong>Junk</strong> folder.</p>
                         </div>
 
                         <form onSubmit={handleVerifyOTP} className="auth-form">
@@ -541,7 +541,7 @@ const Auth = ({ mode = 'login' }) => {
                             <div className="auth-pending-card">
                                 <Check size={20} className="auth-pending-check" />
                                 <div>
-                                    <strong>Email Verified ✅</strong>
+                                    <strong>Email Verified</strong>
                                     <span>{formData.email}</span>
                                 </div>
                             </div>
@@ -562,7 +562,7 @@ const Auth = ({ mode = 'login' }) => {
                         </div>
 
                         <p className="auth-pending-note">
-                            ⚠️ You cannot login until your account is approved by an admin. Once approved, you'll get an email and can login immediately.
+                            You cannot login until your account is approved by an admin. Once approved, you'll get an email and can login immediately.
                         </p>
 
                         <button onClick={() => { setIsLogin(true); setRegStep('form'); navigate('/login', { replace: true }); }} className="btn btn-primary btn-lg auth-submit">

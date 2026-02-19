@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield, Cpu } from './Icons';
+import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield, Cpu, Lock, Zap } from './Icons';
 
 // AI Smart Rename: extract clean name from APK filename
 const suggestApkName = (filename) => {
@@ -481,21 +481,21 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
                         </div>
                         <div className="help-content">
                             <div className="help-item">
-                                <span className="help-icon">🛡️</span>
+                                <span className="help-icon"><Shield size={18} /></span>
                                 <div>
                                     <strong>Prevent Theft</strong>
                                     <p>Stops other websites from copying your direct download link.</p>
                                 </div>
                             </div>
                             <div className="help-item">
-                                <span className="help-icon">🔒</span>
+                                <span className="help-icon"><Lock size={18} /></span>
                                 <div>
                                     <strong>Traffic Security</strong>
                                     <p>Ensures that users must visit YOUR website to download the file.</p>
                                 </div>
                             </div>
                             <div className="help-item">
-                                <span className="help-icon">💰</span>
+                                <span className="help-icon"><Zap size={18} /></span>
                                 <div>
                                     <strong>Save Bandwidth</strong>
                                     <p>Prevents hotlinking which uses up your storage bandwidth.</p>
