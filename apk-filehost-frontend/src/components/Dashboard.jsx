@@ -504,7 +504,7 @@ const Dashboard = ({ activePage = 'overview' }) => {
                         </div>
                         <div className="upgrade-popup-info">
                             <p>Phone: 0300-4503618</p>
-                            <p>Email: syedmuhammadali756@gmail.com</p>
+                            <p>Email: syedmuhammadalibukhari756@gmail.com</p>
                         </div>
                     </div>
                 </div>
