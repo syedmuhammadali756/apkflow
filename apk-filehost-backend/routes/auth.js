@@ -357,6 +357,7 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
                 id: user._id,
                 email: user.email,
                 name: user.name,
+                plan: user.plan || 'free',
                 storageUsed: user.totalStorageUsed,
                 storageQuota: user.storageQuota,
                 filesCount: user.filesCount,

@@ -44,12 +44,16 @@ const upload = multer({
 // @access  Private
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
     try {
-        // Check upload limit (Max 3 files per user)
+        // Check upload limit based on user's plan
+        const user = await User.findById(req.userId);
+        const planLimits = User.PLAN_LIMITS[user.plan] || User.PLAN_LIMITS.free;
         const currentFileCount = await File.countDocuments({ userId: req.userId, isActive: true });
-        if (currentFileCount >= 3) {
+        if (currentFileCount >= planLimits.maxFiles) {
             return res.status(400).json({
                 success: false,
-                message: 'Upload limit reached. Free accounts are limited to 3 files.'
+                message: `Upload limit reached. Your ${user.plan} plan allows ${planLimits.maxFiles} file(s). Upgrade your plan for more uploads.`,
+                upgradeRequired: true,
+                currentPlan: user.plan
             });
         }
 
@@ -320,12 +324,16 @@ router.post('/presign', auth, async (req, res) => {
             return res.status(400).json({ success: false, message: 'fileName is required' });
         }
 
-        // Check upload limit
+        // Check upload limit based on user's plan
+        const user = await User.findById(req.userId);
+        const planLimits = User.PLAN_LIMITS[user.plan] || User.PLAN_LIMITS.free;
         const currentFileCount = await File.countDocuments({ userId: req.userId, isActive: true });
-        if (currentFileCount >= 3) {
+        if (currentFileCount >= planLimits.maxFiles) {
             return res.status(400).json({
                 success: false,
-                message: 'Upload limit reached. Free accounts are limited to 3 files.'
+                message: `Upload limit reached. Your ${user.plan} plan allows ${planLimits.maxFiles} file(s). Upgrade your plan for more uploads.`,
+                upgradeRequired: true,
+                currentPlan: user.plan
             });
         }
 

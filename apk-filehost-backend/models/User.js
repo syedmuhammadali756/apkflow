@@ -91,6 +91,11 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         select: false
+    },
+    plan: {
+        type: String,
+        enum: ['free', 'starter', 'pro'],
+        default: 'free'
     }
 }, {
     timestamps: true
@@ -125,6 +130,13 @@ userSchema.methods.hasStorageSpace = function (fileSize) {
 userSchema.methods.updateStorage = function (bytes) {
     this.totalStorageUsed += bytes;
     return this.save();
+};
+
+// Plan limits config
+userSchema.statics.PLAN_LIMITS = {
+    free: { maxFiles: 1, protectedLinks: false, storage: 5 * 1024 * 1024 * 1024 },
+    starter: { maxFiles: 3, protectedLinks: true, storage: 5 * 1024 * 1024 * 1024 },
+    pro: { maxFiles: 999, protectedLinks: true, storage: 10 * 1024 * 1024 * 1024 }
 };
 
 module.exports = mongoose.model('User', userSchema);

@@ -307,23 +307,31 @@ const sendAdminNotificationEmail = async (userName, userEmail, userIP) => {
 };
 
 // ============================
-// 3. Account Approved
+// 3. Account Approved (Plan-Specific)
 // ============================
-const sendApprovalEmail = async (to, userName) => {
+const sendApprovalEmail = async (to, userName, plan = 'free') => {
     const transporter = createTransporter();
+
+    const planLabels = {
+        free: { name: 'Free', color: '#64748b', maxFiles: '1 file', protectedLinks: 'Not included' },
+        starter: { name: 'Starter', color: '#7c3aed', maxFiles: '3 files', protectedLinks: 'Included ✓' },
+        pro: { name: 'Pro', color: '#f59e0b', maxFiles: 'Unlimited', protectedLinks: 'Included ✓' }
+    };
+    const p = planLabels[plan] || planLabels.free;
 
     const bodyContent = `
         ${headingHTML(
         'Account Status Update',
         '&#x1F389;',
         `Welcome Aboard, ${userName}!`,
-        'Great news! Your APKFlow account has been <strong style="color:#4ade80;">approved</strong>. You now have full access.'
+        `Great news! Your APKFlow account has been <strong style="color:#4ade80;">approved</strong> on the <strong style="color:${p.color};">${p.name} Plan</strong>.`
     )}
         ${infoBoxHTML([
         { label: '&#x2705; Status', value: '<span style="background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">Approved</span>' },
+        { label: '&#x1F3F7; Plan', value: `<span style="background:rgba(124,58,237,0.12); color:${p.color}; border:1px solid rgba(124,58,237,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">${p.name}</span>` },
         { label: '&#x1F4E6; Free Storage', value: '5 GB' },
-        { label: '&#x1F4E4; Max Upload', value: '1 GB per file' },
-        { label: '&#x1F4C1; Max Files', value: '3 files' }
+        { label: '&#x1F4C1; Max Files', value: p.maxFiles },
+        { label: '&#x1F512; Protected Links', value: p.protectedLinks }
     ])}
         <!-- Features row using table -->
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -361,9 +369,9 @@ const sendApprovalEmail = async (to, userName) => {
         },
         replyTo: process.env.EMAIL_USER,
         to: to,
-        subject: `Your APKFlow Account Has Been Approved!`,
-        text: `Great news, ${userName}! Your APKFlow account has been approved. Login at https://apkflow.vercel.app/login`,
-        html: buildEmail(bodyContent, `Your APKFlow account has been approved!`)
+        subject: `Your APKFlow Account Has Been Approved! (${p.name} Plan)`,
+        text: `Great news, ${userName}! Your APKFlow account has been approved on the ${p.name} Plan. Login at https://apkflow.vercel.app/login`,
+        html: buildEmail(bodyContent, `Your APKFlow account has been approved on the ${p.name} Plan!`)
     };
 
     try {
@@ -643,6 +651,58 @@ const sendRemovalEmail = async (to, userName, reason) => {
     }
 };
 
+// ============================
+// 9. Plan Upgrade Notification
+// ============================
+const sendPlanUpgradeEmail = async (to, userName, newPlan, oldPlan) => {
+    const transporter = createTransporter();
+
+    const planLabels = {
+        free: { name: 'Free', color: '#64748b', maxFiles: '1 file', protectedLinks: 'Not included' },
+        starter: { name: 'Starter', color: '#7c3aed', maxFiles: '3 files', protectedLinks: 'Included ✓' },
+        pro: { name: 'Pro', color: '#f59e0b', maxFiles: 'Unlimited', protectedLinks: 'Included ✓' }
+    };
+    const p = planLabels[newPlan] || planLabels.free;
+    const oldP = planLabels[oldPlan] || planLabels.free;
+
+    const bodyContent = `
+        ${headingHTML(
+        'Plan Updated',
+        '&#x1F680;',
+        `Plan Upgrade, ${userName}!`,
+        `Your APKFlow plan has been upgraded from <strong style="color:${oldP.color};">${oldP.name}</strong> to <strong style="color:${p.color};">${p.name}</strong>!`
+    )}
+        ${infoBoxHTML([
+        { label: '&#x1F3F7; New Plan', value: `<span style="background:rgba(124,58,237,0.12); color:${p.color}; border:1px solid rgba(124,58,237,0.25); padding:4px 12px; border-radius:16px; font-size:11px; font-weight:700; text-transform:uppercase;">${p.name}</span>` },
+        { label: '&#x1F4C1; Max Files', value: p.maxFiles },
+        { label: '&#x1F512; Protected Links', value: p.protectedLinks },
+        { label: '&#x1F4E6; Storage', value: '5 GB' }
+    ])}
+        ${tipBoxHTML('Your new plan features are now active. Login to start using them immediately!')}
+        ${buttonHTML('Login to Dashboard &rarr;', 'https://apkflow.vercel.app/login')}
+    `;
+
+    const mailOptions = {
+        from: {
+            name: 'APKFlow',
+            address: process.env.EMAIL_USER
+        },
+        replyTo: process.env.EMAIL_USER,
+        to: to,
+        subject: `Your APKFlow Plan Has Been Upgraded to ${p.name}! 🚀`,
+        text: `Great news, ${userName}! Your APKFlow plan has been upgraded from ${oldP.name} to ${p.name}. Login at https://apkflow.vercel.app/login`,
+        html: buildEmail(bodyContent, `Your plan has been upgraded to ${p.name}!`)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Plan upgrade email error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     generateOTP,
     sendVerificationEmail,
@@ -652,5 +712,6 @@ module.exports = {
     sendPasswordResetEmail,
     sendSuspensionEmail,
     sendUnsuspensionEmail,
-    sendRemovalEmail
+    sendRemovalEmail,
+    sendPlanUpgradeEmail
 };

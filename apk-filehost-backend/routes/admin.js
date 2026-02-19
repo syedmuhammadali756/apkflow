@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const File = require('../models/File');
-const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail, sendUnsuspensionEmail, sendRemovalEmail } = require('../utils/emailService');
+const { sendApprovalEmail, sendRejectionEmail, sendSuspensionEmail, sendUnsuspensionEmail, sendRemovalEmail, sendPlanUpgradeEmail } = require('../utils/emailService');
 const DownloadLog = require('../models/DownloadLog');
 const { deleteFromTebi } = require('../utils/tebiStorage');
 
@@ -62,6 +62,7 @@ router.get('/users', adminAuth, async (req, res) => {
                 suspendedAt: user.suspendedAt,
                 suspendReason: user.suspendReason || '',
                 accountStatus: user.accountStatus || 'approved',
+                plan: user.plan || 'free',
                 isEmailVerified: user.isEmailVerified || false,
                 registrationIP: user.registrationIP || '',
                 deviceFingerprint: user.deviceFingerprint || '',
@@ -216,23 +217,57 @@ router.get('/pending', adminAuth, async (req, res) => {
 // @desc    Approve a pending user account
 router.post('/approve/:id', adminAuth, async (req, res) => {
     try {
+        const { plan } = req.body;
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         user.accountStatus = 'approved';
+        user.plan = plan || 'free';
         await user.save();
 
-        // Send approval notification email to user
-        const emailResult = await sendApprovalEmail(user.email, user.name);
+        // Send approval notification email to user with plan info
+        const emailResult = await sendApprovalEmail(user.email, user.name, user.plan);
         if (!emailResult.success) {
             console.error('Failed to send approval email:', emailResult.error);
         }
 
-        res.json({ success: true, message: `User ${user.name} has been approved and notified via email.` });
+        res.json({ success: true, message: `User ${user.name} has been approved on ${user.plan} plan and notified via email.` });
     } catch (error) {
         console.error('Admin approve error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// @route   POST /api/admin/users/:id/change-plan
+// @desc    Change a user's subscription plan
+router.post('/users/:id/change-plan', adminAuth, async (req, res) => {
+    try {
+        const { plan } = req.body;
+        if (!['free', 'starter', 'pro'].includes(plan)) {
+            return res.status(400).json({ success: false, message: 'Invalid plan. Must be free, starter, or pro.' });
+        }
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const oldPlan = user.plan || 'free';
+        user.plan = plan;
+        await user.save();
+
+        // Send plan upgrade email
+        try {
+            await sendPlanUpgradeEmail(user.email, user.name, plan, oldPlan);
+        } catch (emailErr) {
+            console.error('Plan upgrade email failed:', emailErr);
+        }
+
+        res.json({ success: true, message: `${user.name}'s plan changed from ${oldPlan} to ${plan}.` });
+    } catch (error) {
+        console.error('Admin change-plan error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
