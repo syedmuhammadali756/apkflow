@@ -23,7 +23,6 @@ const upload = multer({
     },
     fileFilter: (req, file, cb) => {
         // Only allow APK files
-        const allowedMimes = ['application/vnd.android.package-archive', 'application/octet-stream'];
         const allowedExtensions = ['.apk'];
 
         const fileExtension = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf('.'));
@@ -36,9 +35,6 @@ const upload = multer({
     }
 });
 
-// @route   POST /api/files/upload
-// @desc    Upload an APK file (supports direct metadata or multipart)
-// @access  Private
 // @route   POST /api/files/upload
 // @desc    Upload an APK file (supports direct metadata or multipart)
 // @access  Private
@@ -63,8 +59,16 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         if (req.body.storageKey && req.body.fileUrl) {
             originalName = req.body.originalName;
             fileSize = parseInt(req.body.fileSize);
+            // Validate fileSize to prevent NaN, zero, or negative values
+            if (!fileSize || fileSize <= 0 || isNaN(fileSize)) {
+                return res.status(400).json({ success: false, message: 'Invalid file size' });
+            }
             mimetype = req.body.mimetype || 'application/octet-stream';
             storageKey = req.body.storageKey;
+            // Sanitize storageKey to prevent path traversal
+            if (storageKey.includes('..') || storageKey.startsWith('/')) {
+                return res.status(400).json({ success: false, message: 'Invalid storage key' });
+            }
             storageType = req.body.storageType || 'tebi';
         }
         // Mode 2: Classic multipart file upload
@@ -212,8 +216,8 @@ router.delete('/:fileId', auth, async (req, res) => {
     try {
         const { fileId } = req.params;
 
-        // Find file
-        const file = await File.findOne({ fileId, userId: req.userId });
+        // Find file (only active files can be deleted)
+        const file = await File.findOne({ fileId, userId: req.userId, isActive: true });
 
         if (!file) {
             return res.status(404).json({
@@ -230,10 +234,10 @@ router.delete('/:fileId', auth, async (req, res) => {
             // Continue to delete from DB even if storage deletion fails
         }
 
-        // Update user storage
+        // Update user storage (protect against negative values)
         const user = await User.findById(req.userId);
-        user.totalStorageUsed -= file.fileSize;
-        user.filesCount -= 1;
+        user.totalStorageUsed = Math.max(0, user.totalStorageUsed - file.fileSize);
+        user.filesCount = Math.max(0, user.filesCount - 1);
         await user.save();
 
         // Soft delete (mark as inactive)
@@ -363,6 +367,19 @@ router.post('/multipart/init', auth, async (req, res) => {
     try {
         const { fileName, contentType } = req.body;
         if (!fileName) return res.status(400).json({ success: false, message: 'fileName is required' });
+
+        // Check upload limit based on user's plan (prevents bypass via multipart)
+        const user = await User.findById(req.userId);
+        const planLimits = User.PLAN_LIMITS[user.plan] || User.PLAN_LIMITS.free;
+        const currentFileCount = await File.countDocuments({ userId: req.userId, isActive: true });
+        if (currentFileCount >= planLimits.maxFiles) {
+            return res.status(400).json({
+                success: false,
+                message: `Upload limit reached. Your ${user.plan} plan allows ${planLimits.maxFiles} file(s). Upgrade your plan for more uploads.`,
+                upgradeRequired: true,
+                currentPlan: user.plan
+            });
+        }
 
         const fileExt = fileName.split('.').pop();
         const storageKey = `uploads/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
