@@ -23,7 +23,7 @@ const fileSchema = new mongoose.Schema({
     },
     mimeType: {
         type: String,
-        default: 'application/vnd.android.package-archive'
+        default: 'application/octet-stream'
     },
     storageKey: {
         type: String,

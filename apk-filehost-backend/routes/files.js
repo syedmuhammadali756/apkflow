@@ -20,18 +20,6 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: (process.env.MAX_FILE_SIZE_MB || 1024) * 1024 * 1024 // Default 1GB
-    },
-    fileFilter: (req, file, cb) => {
-        // Only allow APK files
-        const allowedExtensions = ['.apk'];
-
-        const fileExtension = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf('.'));
-
-        if (allowedExtensions.includes(fileExtension)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only APK files are allowed'), false);
-        }
     }
 });
 
@@ -115,7 +103,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
             brandName,
             allowedDomain: finalAllowedDomain,
             metadata: {
-                fileExtension: '.apk',
+                fileExtension: originalName.includes('.') ? originalName.slice(originalName.lastIndexOf('.')) : '',
                 uploadIP: req.ip,
                 userAgent: req.get('user-agent')
             }
@@ -272,19 +260,15 @@ router.put('/:fileId/rename', auth, async (req, res) => {
             });
         }
 
-        // Ensure .apk extension
         let finalName = newName.trim();
-        if (!finalName.toLowerCase().endsWith('.apk')) {
-            finalName += '.apk';
-        }
-
+        // Preserve original file extension if user didn't include one
         const file = await File.findOne({ fileId, userId: req.userId, isActive: true });
-
         if (!file) {
-            return res.status(404).json({
-                success: false,
-                message: 'File not found'
-            });
+            return res.status(404).json({ success: false, message: 'File not found' });
+        }
+        const originalExt = file.originalName.includes('.') ? file.originalName.slice(file.originalName.lastIndexOf('.')) : '';
+        if (originalExt && !finalName.includes('.')) {
+            finalName += originalExt;
         }
 
         file.originalName = finalName;

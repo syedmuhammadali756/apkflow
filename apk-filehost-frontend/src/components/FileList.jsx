@@ -47,7 +47,7 @@ const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
 
     const startRename = (file) => {
         setRenamingFile(file.fileId);
-        setNewName(file.customName || file.originalName.replace(/\.apk$/i, ''));
+        setNewName(file.customName || file.originalName.replace(/\.[^.]+$/, ''));
         setNewBrand(file.brandName || '');
         setNewDomain(file.allowedDomain || '');
     };
@@ -139,7 +139,7 @@ const FileList = ({ files, onDelete, onRename, userPlan = 'free' }) => {
             <div className="filelist-empty glass-card">
                 <Folder size={48} />
                 <h3>No files uploaded yet</h3>
-                <p>Upload your first APK to get started with APKFlow.</p>
+                <p>Upload your first file to get started with APKFlow.</p>
             </div>
         );
     }

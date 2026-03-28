@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Upload, Package, X, Check, Copy, Cloud, Globe, Shield, Cpu, Lock, Zap } from './Icons';
 
-// AI Smart Rename: extract clean name from APK filename
-const suggestApkName = (filename) => {
-    // Remove .apk extension
-    let name = filename.replace(/\.apk$/i, '');
+// AI Smart Rename: extract clean name from filename
+const suggestFileName = (filename) => {
+    // Remove file extension
+    let name = filename.replace(/\.[^.]+$/, '');
     // Extract version (e.g., v1.2.3, 1.2.3, -v2.3.1)
     const versionMatch = name.match(/[-_]v?(\d+\.\d+(?:\.\d+)?(?:\.\d+)?)/i);
     const version = versionMatch ? versionMatch[1] : null;
@@ -79,12 +79,12 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
 
         setUploadedLink('');
         setCopied(false);
-        if (!selectedFile.name.endsWith('.apk')) { setError('Only APK files are allowed'); return; }
+        // All file types are allowed
         const maxSize = 1024 * 1024 * 1024; // 1GB with Tebi.io
         if (selectedFile.size > maxSize) { setError('File size must be less than 1GB'); return; }
         setFile(selectedFile);
         // AI Smart Rename
-        const suggestion = suggestApkName(selectedFile.name);
+        const suggestion = suggestFileName(selectedFile.name);
         setAiSuggestion(suggestion);
         setAiDismissed(false);
     };
@@ -287,7 +287,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
             <div className="upload-header">
                 <div className="upload-title-row">
                     <Upload size={22} />
-                    <h2>Upload APK File</h2>
+                    <h2>Upload File</h2>
                 </div>
                 <span className={`limit-badge ${uploadsRemaining === 0 ? 'limit-zero' : ''}`}>
                     {uploadsRemaining} uploads remaining
@@ -324,7 +324,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".apk"
+                    accept="*/*"
                     onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                     style={{ display: 'none' }}
                     disabled={uploadsRemaining <= 0}
@@ -337,7 +337,7 @@ const FileUpload = ({ onUploadSuccess, fileCount = 0, userPlan = 'free' }) => {
                         </div>
                         {uploadsRemaining > 0 ? (
                             <>
-                                <p className="drop-text">Drag & drop your APK file here</p>
+                                <p className="drop-text">Drag & drop your file here</p>
                                 <p className="drop-hint">or <span className="browse-text">click to browse</span> — Max 1GB</p>
                             </>
                         ) : (

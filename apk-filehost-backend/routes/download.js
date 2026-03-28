@@ -265,17 +265,21 @@ router.get('/:fileId/download', async (req, res) => {
 
 // ========== Helper: Serve the actual file ==========
 async function serveFile(req, res, file) {
+  // Get the original file extension
+  const originalExt = file.originalName.includes('.') ? file.originalName.slice(file.originalName.lastIndexOf('.')) : '';
+
   // Build custom download filename
   let downloadName = file.originalName;
 
   if (file.customName && file.customName.trim()) {
     let name = file.customName.trim();
-    if (!name.toLowerCase().endsWith('.apk')) name += '.apk';
+    // Add original extension if not already present
+    if (originalExt && !name.includes('.')) name += originalExt;
     if (file.brandName && file.brandName.trim()) {
       const brand = file.brandName.trim().replace(/[^a-zA-Z0-9_\-. ]/g, '');
-      // Format: AppName_BrandName.apk
-      const nameWithoutExt = name.replace(/\.apk$/i, '');
-      downloadName = `${nameWithoutExt}_${brand}.apk`;
+      const nameExt = name.includes('.') ? name.slice(name.lastIndexOf('.')) : originalExt;
+      const nameWithoutExt = name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
+      downloadName = `${nameWithoutExt}_${brand}${nameExt}`;
     } else {
       downloadName = name;
     }
